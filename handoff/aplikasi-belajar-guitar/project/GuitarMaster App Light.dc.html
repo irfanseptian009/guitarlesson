@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; background: #E4D8C4; }
+    * { box-sizing: border-box; }
+    input[type="range"] { accent-color: #E07B28; }
+    ::-webkit-scrollbar { width: 0; height: 0; }
+  </style>
+</helmet>
+
+<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 48px 24px; background: radial-gradient(circle at 50% 20%, #F0E7D6 0%, #DFD2BC 65%); font-family: 'Sora', sans-serif;">
+
+  <!-- ===================== PHONE ===================== -->
+  <div style="width: 410px; border-radius: 56px; padding: 10px; background: #CFCAC0; border: 1px solid rgba(0,0,0,0.15); box-shadow: 0 40px 90px rgba(95,78,50,0.35), inset 0 1px 0 rgba(255,255,255,0.6);">
+    <div style="position: relative; width: 390px; height: 844px; border-radius: 46px; overflow: hidden; background: linear-gradient(168deg, #FAF7F0 0%, #F3EEE3 100%); color: #17150F;">
+
+      <!-- Status bar -->
+      <div style="position: absolute; top: 0; left: 0; right: 0; height: 52px; z-index: 40; display: flex; align-items: center; justify-content: space-between; padding: 0 28px;">
+        <div style="font-size: 15px; font-weight: 600;">9:41</div>
+        <div style="width: 110px; height: 28px; border-radius: 16px; background: #17150F;"></div>
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <div style="display: flex; align-items: flex-end; gap: 2px;">
+            <div style="width: 3px; height: 5px; border-radius: 1px; background: #17150F;"></div>
+            <div style="width: 3px; height: 8px; border-radius: 1px; background: #17150F;"></div>
+            <div style="width: 3px; height: 11px; border-radius: 1px; background: #17150F;"></div>
+          </div>
+          <div style="width: 22px; height: 11px; border-radius: 4px; border: 1.5px solid rgba(23,21,15,0.7); padding: 1.5px;"><div style="width: 70%; height: 100%; border-radius: 2px; background: #17150F;"></div></div>
+        </div>
+      </div>
+
+      <!-- ===================== ONBOARDING ===================== -->
+      <sc-if value="{{ isOnboarding }}" hint-placeholder-val="{{ true }}">
+        <div data-screen-label="Onboarding" style="position: absolute; inset: 0; display: flex; flex-direction: column;">
+          <div style="position: absolute; inset: 0; background: repeating-linear-gradient(115deg, #EFE7D6 0px, #EFE7D6 14px, #E7DDC9 14px, #E7DDC9 28px);"></div>
+          <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
+            <div style="font-family: monospace; font-size: 12px; color: rgba(23,21,15,0.4); border: 1px dashed rgba(23,21,15,0.3); padding: 8px 14px; border-radius: 8px;">foto: gitaris akustik close-up</div>
+          </div>
+          <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(250,247,240,0.1) 30%, rgba(250,247,240,0.94) 78%);"></div>
+          <div style="position: absolute; top: 62px; right: 26px; z-index: 5;">
+            <div onClick="{{ nav.home }}" style="font-size: 14px; color: rgba(23,21,15,0.6); text-decoration: underline; cursor: pointer; padding: 8px;">Skip</div>
+          </div>
+          <div style="position: relative; margin-top: auto; padding: 0 22px 40px; display: flex; flex-direction: column; gap: 18px; z-index: 5;">
+            <div style="background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.06); border-radius: 26px; padding: 26px 24px; backdrop-filter: blur(14px); display: flex; flex-direction: column; gap: 12px; box-shadow: 0 12px 32px rgba(95,78,50,0.1);">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #E07B28;"></div>
+                <div style="font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #C05F16; font-weight: 600;">GuitarMaster</div>
+              </div>
+              <div style="font-size: 30px; font-weight: 700; line-height: 1.22; text-wrap: pretty;">Dari chord pertama sampai solo di panggung</div>
+              <div style="font-size: 14px; line-height: 1.6; color: rgba(23,21,15,0.6);">Learning path adaptif, tuner &amp; metronome presisi, plus AI yang mendengar permainanmu dan memberi feedback real-time.</div>
+            </div>
+            <div onClick="{{ nav.home }}" style-hover="filter: brightness(1.25);" style="height: 58px; border-radius: 29px; background: #17150F; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; letter-spacing: 1px; color: #F6F3EC; cursor: pointer; box-shadow: 0 12px 30px rgba(23,21,15,0.3);">MULAI BELAJAR</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== HOME ===================== -->
+      <sc-if value="{{ isHome }}">
+        <div data-screen-label="Home" style="position: absolute; inset: 0; overflow-y: auto; padding: 68px 22px 118px; display: flex; flex-direction: column; gap: 18px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #EE9448, #C86416); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: #FFF8EF;">RA</div>
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <div style="font-size: 12px; color: rgba(23,21,15,0.5);">Selamat pagi</div>
+                <div style="font-size: 17px; font-weight: 600;">Raka Pratama</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; background: rgba(224,123,40,0.12); border: 1px solid rgba(224,123,40,0.35); border-radius: 18px; padding: 7px 13px;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background: #E07B28;"></div>
+              <div style="font-size: 13px; font-weight: 700; color: #C05F16;">12 hari streak</div>
+            </div>
+          </div>
+
+          <div style="font-size: 26px; font-weight: 700;">Latihanmu hari ini</div>
+
+          <!-- Progress card -->
+          <div onClick="{{ nav.practice }}" style-hover="border-color: rgba(224,123,40,0.4);" style="cursor: pointer; background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 24px; padding: 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; box-shadow: 0 8px 24px rgba(95,78,50,0.07);">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="font-size: 19px; font-weight: 700;">Progress</div>
+              <div style="font-size: 13px; color: rgba(23,21,15,0.5);">Minggu ini · 4 dari 5 sesi</div>
+              <div style="margin-top: 6px; align-self: flex-start; background: #17150F; color: #F6F3EC; font-size: 13px; font-weight: 700; border-radius: 16px; padding: 9px 18px;">Lanjut latihan</div>
+            </div>
+            <div style="position: relative; width: 112px; height: 112px; border-radius: 50%; background: conic-gradient(#E07B28 0% 68%, #93B87B 68% 80%, rgba(23,21,15,0.08) 80% 100%); display: flex; align-items: center; justify-content: center;">
+              <div style="width: 82px; height: 82px; border-radius: 50%; background: #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div style="font-size: 22px; font-weight: 800;">68%</div>
+                <div style="font-size: 10px; color: rgba(23,21,15,0.45);">goal mingguan</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick stats -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 20px; padding: 14px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+              <div style="font-size: 11px; color: #C05F16; font-weight: 600;">Menit latihan</div>
+              <div style="font-size: 22px; font-weight: 800;">186<span style="font-size: 12px; font-weight: 500; color: rgba(23,21,15,0.45);">/{{ goalWeekMinutes }}</span></div>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 20px; padding: 14px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+              <div style="font-size: 11px; color: #4F7A42; font-weight: 600;">Chord dikuasai</div>
+              <div style="font-size: 22px; font-weight: 800;">14<span style="font-size: 12px; font-weight: 500; color: rgba(23,21,15,0.45);">/24</span></div>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 20px; padding: 14px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+              <div style="font-size: 11px; color: #A8842E; font-weight: 600;">Akurasi AI</div>
+              <div style="font-size: 22px; font-weight: 800;">87<span style="font-size: 12px; font-weight: 500; color: rgba(23,21,15,0.45);">%</span></div>
+            </div>
+          </div>
+
+          <!-- Continue lesson -->
+          <div onClick="{{ nav.lesson }}" style-hover="border-color: rgba(111,160,94,0.5);" style="cursor: pointer; background: linear-gradient(140deg, rgba(147,184,123,0.18), #FFFFFF 60%); border: 1px solid rgba(111,160,94,0.3); border-radius: 24px; padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 8px 24px rgba(95,78,50,0.07);">
+            <div style="width: 54px; height: 54px; border-radius: 18px; background: rgba(111,160,94,0.16); display: flex; align-items: center; justify-content: center;">
+              <div style="width: 0; height: 0; border-left: 14px solid #4F7A42; border-top: 9px solid transparent; border-bottom: 9px solid transparent; margin-left: 4px;"></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
+              <div style="font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #4F7A42; font-weight: 600;">Lanjutkan lesson</div>
+              <div style="font-size: 16px; font-weight: 700;">Ganti chord dengan cepat</div>
+              <div style="height: 5px; border-radius: 3px; background: rgba(23,21,15,0.08); margin-top: 4px;"><div style="width: 62%; height: 100%; border-radius: 3px; background: #6FA05E;"></div></div>
+            </div>
+            <div style="font-size: 13px; font-weight: 700; color: #4F7A42;">62%</div>
+          </div>
+
+          <!-- Daily challenge -->
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 8px 24px rgba(95,78,50,0.07);">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 8px; height: 8px; border-radius: 2px; background: #A8842E; transform: rotate(45deg);"></div>
+                <div style="font-size: 15px; font-weight: 700;">Daily Challenge</div>
+              </div>
+              <div style="font-size: 12px; color: #A8842E; font-weight: 600;">+50 XP</div>
+            </div>
+            <div style="font-size: 13px; line-height: 1.55; color: rgba(23,21,15,0.6);">Mainkan transisi Am → G → C sebanyak 20x tanpa jeda. AI akan menilai kebersihan tiap chord.</div>
+            <div onClick="{{ nav.lesson }}" style="align-self: flex-start; border: 1px solid rgba(168,132,46,0.45); color: #A8842E; font-size: 13px; font-weight: 600; border-radius: 16px; padding: 8px 16px; cursor: pointer;">Mulai challenge</div>
+          </div>
+
+          <!-- Quick tools -->
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 17px; font-weight: 700;">Tools cepat</div>
+            <div onClick="{{ nav.tools }}" style="font-size: 13px; color: #C05F16; cursor: pointer; font-weight: 600;">Lihat semua</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div onClick="{{ nav.tuner }}" style-hover="border-color: rgba(224,123,40,0.45);" style="cursor: pointer; background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+              <div style="width: 38px; height: 38px; border-radius: 50%; border: 2px solid #E07B28; position: relative; display: flex; align-items: center; justify-content: center;"><div style="width: 2px; height: 13px; background: #E07B28; border-radius: 1px; transform: rotate(28deg); transform-origin: bottom center; margin-bottom: 12px;"></div><div style="position: absolute; bottom: 8px; width: 5px; height: 5px; border-radius: 50%; background: #E07B28;"></div></div>
+              <div style="display: flex; flex-direction: column;"><div style="font-size: 14px; font-weight: 700;">Tuner</div><div style="font-size: 11px; color: rgba(23,21,15,0.45);">Setem presisi</div></div>
+            </div>
+            <div onClick="{{ nav.metronome }}" style-hover="border-color: rgba(111,160,94,0.5);" style="cursor: pointer; background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+              <div style="width: 38px; height: 38px; border-radius: 12px; border: 2px solid #6FA05E; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 5px; gap: 3px;"><div style="width: 4px; height: 9px; border-radius: 2px; background: #6FA05E;"></div><div style="width: 4px; height: 15px; border-radius: 2px; background: #6FA05E;"></div><div style="width: 4px; height: 6px; border-radius: 2px; background: #6FA05E;"></div></div>
+              <div style="display: flex; flex-direction: column;"><div style="font-size: 14px; font-weight: 700;">Metronome</div><div style="font-size: 11px; color: rgba(23,21,15,0.45);">+ drum tracks</div></div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== LESSONS ===================== -->
+      <sc-if value="{{ isLessons }}">
+        <div data-screen-label="Lessons" style="position: absolute; inset: 0; overflow-y: auto; padding: 68px 22px 118px; display: flex; flex-direction: column; gap: 18px;">
+          <div style="font-size: 26px; font-weight: 700;">Learning Path</div>
+          <div style="font-size: 13px; color: rgba(23,21,15,0.5); margin-top: -10px;">Kurikulum adaptif — menyesuaikan skor AI-mu</div>
+          <div style="display: flex; gap: 8px;">
+            <sc-for list="{{ lessonTabs }}" as="t" hint-placeholder-count="3">
+              <div onClick="{{ t.on }}" style="cursor: pointer; padding: 9px 18px; border-radius: 18px; font-size: 13px; font-weight: 600; background: {{ t.bg }}; color: {{ t.color }}; border: 1px solid {{ t.border }};">{{ t.name }}</div>
+            </sc-for>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <sc-for list="{{ lessons }}" as="ls" hint-placeholder-count="4">
+              <div onClick="{{ nav.lesson }}" style-hover="border-color: rgba(224,123,40,0.4);" style="cursor: pointer; background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 22px; padding: 18px; display: flex; align-items: center; gap: 14px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+                <div style="width: 46px; height: 46px; border-radius: 16px; background: {{ ls.iconBg }}; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: {{ ls.iconColor }};">{{ ls.num }}</div>
+                <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
+                  <div style="font-size: 15px; font-weight: 700;">{{ ls.title }}</div>
+                  <div style="font-size: 12px; color: rgba(23,21,15,0.45);">{{ ls.meta }}</div>
+                </div>
+                <div style="font-size: 12px; font-weight: 700; color: {{ ls.stateColor }};">{{ ls.state }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== LESSON PLAYER ===================== -->
+      <sc-if value="{{ isLesson }}">
+        <div data-screen-label="Lesson Player" style="position: absolute; inset: 0; overflow-y: auto; padding: 68px 22px 118px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div onClick="{{ nav.lessons }}" style="cursor: pointer; width: 40px; height: 40px; border-radius: 50%; background: rgba(23,21,15,0.06); display: flex; align-items: center; justify-content: center;"><div style="width: 9px; height: 9px; border-left: 2px solid #17150F; border-bottom: 2px solid #17150F; transform: rotate(45deg); margin-left: 3px;"></div></div>
+            <div style="display: flex; flex-direction: column;">
+              <div style="font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(23,21,15,0.45);">Beginner · Lesson 04</div>
+              <div style="font-size: 17px; font-weight: 700;">Ganti chord dengan cepat</div>
+            </div>
+          </div>
+
+          <!-- Video -->
+          <div style="position: relative; height: 196px; border-radius: 22px; overflow: hidden; background: repeating-linear-gradient(115deg, #EFE7D6 0px, #EFE7D6 12px, #E7DDC9 12px, #E7DDC9 24px); border: 1px solid rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center;">
+            <div style="position: absolute; top: 12px; left: 14px; font-family: monospace; font-size: 11px; color: rgba(23,21,15,0.4);">video: demo transisi Am–G–C</div>
+            <div style="width: 58px; height: 58px; border-radius: 50%; background: #17150F; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 26px rgba(23,21,15,0.3);"><div style="width: 0; height: 0; border-left: 16px solid #F6F3EC; border-top: 10px solid transparent; border-bottom: 10px solid transparent; margin-left: 5px;"></div></div>
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: rgba(23,21,15,0.1);"><div style="width: 38%; height: 100%; background: #E07B28;"></div></div>
+          </div>
+
+          <!-- Slow-downer -->
+          <div style="display: flex; align-items: center; justify-content: space-between; background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 20px; padding: 12px 16px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+            <div style="font-size: 13px; font-weight: 600; color: rgba(23,21,15,0.65);">Slow-downer</div>
+            <div style="display: flex; gap: 6px;">
+              <sc-for list="{{ speeds }}" as="sp" hint-placeholder-count="4">
+                <div onClick="{{ sp.on }}" style="cursor: pointer; padding: 7px 13px; border-radius: 14px; font-size: 12px; font-weight: 700; background: {{ sp.bg }}; color: {{ sp.color }};">{{ sp.label }}</div>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- Interactive tab -->
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="font-size: 14px; font-weight: 700;">Tab interaktif</div>
+              <div style="font-size: 11px; color: #4F7A42; font-weight: 600;">auto-scroll aktif</div>
+            </div>
+            <div style="position: relative; padding: 8px 0;">
+              <div style="position: absolute; top: 0; bottom: 0; left: 34%; width: 2px; background: #E07B28; border-radius: 1px; box-shadow: 0 0 10px rgba(224,123,40,0.5);"></div>
+              <div style="display: flex; flex-direction: column; gap: 11px;">
+                <sc-for list="{{ tabLines }}" as="tl" hint-placeholder-count="6">
+                  <div style="position: relative; height: 14px; border-bottom: 1px solid rgba(23,21,15,0.2); display: flex; align-items: center;">
+                    <div style="position: absolute; left: -2px; font-size: 10px; font-family: monospace; color: rgba(23,21,15,0.4);">{{ tl.string }}</div>
+                    <div style="display: flex; gap: 26px; margin-left: 24px; font-family: monospace; font-size: 12px; color: #17150F; font-weight: 700;">
+                      <sc-for list="{{ tl.notes }}" as="n" hint-placeholder-count="6"><div>{{ n }}</div></sc-for>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI feedback -->
+          <div style="background: linear-gradient(140deg, rgba(224,123,40,0.1), #FFFFFF 55%); border: 1px solid rgba(224,123,40,0.3); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #E07B28; box-shadow: 0 0 8px rgba(224,123,40,0.7);"></div>
+                <div style="font-size: 14px; font-weight: 700;">AI Feedback — mendengarkan</div>
+              </div>
+              <div style="font-size: 20px; font-weight: 800; color: #C05F16;">87%</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 9px;">
+              <div style="display: flex; align-items: center; gap: 10px;"><div style="width: 92px; font-size: 12px; color: rgba(23,21,15,0.55);">Kebersihan</div><div style="flex: 1; height: 6px; border-radius: 3px; background: rgba(23,21,15,0.08);"><div style="width: 90%; height: 100%; border-radius: 3px; background: #E07B28;"></div></div><div style="font-size: 12px; font-weight: 700;">90</div></div>
+              <div style="display: flex; align-items: center; gap: 10px;"><div style="width: 92px; font-size: 12px; color: rgba(23,21,15,0.55);">Timing</div><div style="flex: 1; height: 6px; border-radius: 3px; background: rgba(23,21,15,0.08);"><div style="width: 78%; height: 100%; border-radius: 3px; background: #6FA05E;"></div></div><div style="font-size: 12px; font-weight: 700;">78</div></div>
+              <div style="display: flex; align-items: center; gap: 10px;"><div style="width: 92px; font-size: 12px; color: rgba(23,21,15,0.55);">Transisi</div><div style="flex: 1; height: 6px; border-radius: 3px; background: rgba(23,21,15,0.08);"><div style="width: 84%; height: 100%; border-radius: 3px; background: #C9A441;"></div></div><div style="font-size: 12px; font-weight: 700;">84</div></div>
+            </div>
+            <div style="font-size: 12px; line-height: 1.55; color: rgba(23,21,15,0.6); border-top: 1px solid rgba(23,21,15,0.07); padding-top: 12px;">Tip: jari telunjuk terlambat 12ms saat pindah ke G. Coba latih dengan metronome di 70 BPM.</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== TUNER ===================== -->
+      <sc-if value="{{ isTuner }}">
+        <div data-screen-label="Tuner" style="position: absolute; inset: 0; overflow-y: auto; padding: 68px 22px 118px; display: flex; flex-direction: column; gap: 18px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 26px; font-weight: 700;">Tuner</div>
+            <div style="display: flex; align-items: center; gap: 6px; background: rgba(111,160,94,0.12); border: 1px solid rgba(111,160,94,0.35); border-radius: 16px; padding: 7px 13px;">
+              <div style="width: 7px; height: 7px; border-radius: 50%; background: #6FA05E;"></div>
+              <div style="font-size: 12px; font-weight: 600; color: #4F7A42;">Auto · mic aktif</div>
+            </div>
+          </div>
+
+          <!-- Gauge -->
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 26px; padding: 26px 20px 22px; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: 0 8px 24px rgba(95,78,50,0.07);">
+            <div style="position: relative; width: 260px; height: 140px; overflow: hidden;">
+              <div style="position: absolute; bottom: -130px; left: 0; width: 260px; height: 260px; border-radius: 50%; background: conic-gradient(from 270deg, rgba(224,123,40,0.5) 0deg 60deg, rgba(111,160,94,0.65) 60deg 120deg, rgba(201,164,65,0.5) 120deg 180deg, transparent 180deg 360deg);"></div>
+              <div style="position: absolute; bottom: -114px; left: 16px; width: 228px; height: 228px; border-radius: 50%; background: #FFFFFF;"></div>
+              <div style="position: absolute; bottom: 0; left: 50%; width: 4px; height: 112px; margin-left: -2px; border-radius: 2px; background: #17150F; transform-origin: bottom center; transform: {{ needleRot }}; transition: transform 0.14s ease-out;"></div>
+              <div style="position: absolute; bottom: -10px; left: 50%; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%; background: #E07B28; border: 3px solid #FFFFFF;"></div>
+              <div style="position: absolute; top: 6px; left: 50%; transform: translateX(-50%); font-size: 10px; font-family: monospace; color: rgba(23,21,15,0.4);">0</div>
+              <div style="position: absolute; bottom: 8px; left: 10px; font-size: 10px; font-family: monospace; color: rgba(23,21,15,0.4);">-50</div>
+              <div style="position: absolute; bottom: 8px; right: 4px; font-size: 10px; font-family: monospace; color: rgba(23,21,15,0.4);">+50</div>
+            </div>
+            <div style="font-size: 52px; font-weight: 800; line-height: 1;">{{ tunerNote }}</div>
+            <div style="font-size: 14px; font-weight: 700; color: {{ tunerStatusColor }};">{{ tunerStatus }}</div>
+            <div style="font-size: 12px; font-family: monospace; color: rgba(23,21,15,0.45);">{{ tunerCents }} cents · {{ tunerHz }} Hz</div>
+          </div>
+
+          <!-- Strings -->
+          <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;">
+            <sc-for list="{{ tunerStrings }}" as="st" hint-placeholder-count="6">
+              <div onClick="{{ st.on }}" style="cursor: pointer; height: 62px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: {{ st.bg }}; border: 1px solid {{ st.border }}; box-shadow: 0 4px 12px rgba(95,78,50,0.05);">
+                <div style="font-size: 16px; font-weight: 800; color: {{ st.color }};">{{ st.note }}</div>
+                <div style="font-size: 9px; font-family: monospace; color: rgba(23,21,15,0.4);">{{ st.hz }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 20px; padding: 14px 18px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <div style="font-size: 13px; font-weight: 700;">Tuning preset</div>
+              <div style="font-size: 11px; color: rgba(23,21,15,0.45);">Standard E · Drop D · Open G · DADGAD</div>
+            </div>
+            <div style="font-size: 13px; font-weight: 700; color: #C05F16;">Standard E ›</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== METRONOME ===================== -->
+      <sc-if value="{{ isMetronome }}">
+        <div data-screen-label="Metronome" style="position: absolute; inset: 0; overflow-y: auto; padding: 68px 22px 118px; display: flex; flex-direction: column; gap: 18px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div onClick="{{ nav.tools }}" style="cursor: pointer; width: 40px; height: 40px; border-radius: 50%; background: rgba(23,21,15,0.06); display: flex; align-items: center; justify-content: center;"><div style="width: 9px; height: 9px; border-left: 2px solid #17150F; border-bottom: 2px solid #17150F; transform: rotate(45deg); margin-left: 3px;"></div></div>
+            <div style="font-size: 26px; font-weight: 700;">Metronome</div>
+          </div>
+
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 26px; padding: 28px 22px; display: flex; flex-direction: column; align-items: center; gap: 18px; box-shadow: 0 8px 24px rgba(95,78,50,0.07);">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <div style="font-size: 72px; font-weight: 800; line-height: 1;">{{ bpm }}</div>
+              <div style="font-size: 15px; color: rgba(23,21,15,0.45); font-weight: 600;">BPM</div>
+            </div>
+            <div style="font-size: 13px; color: #C05F16; font-weight: 600;">{{ tempoName }}</div>
+            <div style="display: flex; gap: 12px; width: 100%; align-items: center;">
+              <div onClick="{{ bpmDown }}" style="cursor: pointer; width: 46px; height: 46px; border-radius: 50%; background: rgba(23,21,15,0.06); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700;">−</div>
+              <input type="range" min="40" max="220" value="{{ bpm }}" onChange="{{ setBpm }}" style="flex: 1;">
+              <div onClick="{{ bpmUp }}" style="cursor: pointer; width: 46px; height: 46px; border-radius: 50%; background: rgba(23,21,15,0.06); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700;">+</div>
+            </div>
+            <div style="display: flex; gap: 12px;">
+              <sc-for list="{{ beatDots }}" as="bd" hint-placeholder-count="4">
+                <div style="width: 16px; height: 16px; border-radius: 50%; background: {{ bd.bg }}; box-shadow: {{ bd.glow }}; transition: background 0.1s;"></div>
+              </sc-for>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <div onClick="{{ togglePlay }}" style-hover="filter: brightness(1.25);" style="cursor: pointer; width: 74px; height: 74px; border-radius: 50%; background: #17150F; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 30px rgba(23,21,15,0.3);">
+                <sc-if value="{{ notPlaying }}" hint-placeholder-val="{{ true }}"><div style="width: 0; height: 0; border-left: 22px solid #F6F3EC; border-top: 13px solid transparent; border-bottom: 13px solid transparent; margin-left: 6px;"></div></sc-if>
+                <sc-if value="{{ playing }}"><div style="display: flex; gap: 6px;"><div style="width: 7px; height: 24px; border-radius: 2px; background: #F6F3EC;"></div><div style="width: 7px; height: 24px; border-radius: 2px; background: #F6F3EC;"></div></div></sc-if>
+              </div>
+              <div onClick="{{ tapTempo }}" style="cursor: pointer; height: 46px; border-radius: 23px; border: 1px solid rgba(23,21,15,0.2); padding: 0 22px; display: flex; align-items: center; font-size: 13px; font-weight: 700;">TAP TEMPO</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <sc-for list="{{ timeSigs }}" as="ts" hint-placeholder-count="4">
+              <div onClick="{{ ts.on }}" style="cursor: pointer; flex: 1; padding: 11px 0; text-align: center; border-radius: 16px; font-size: 14px; font-weight: 700; background: {{ ts.bg }}; color: {{ ts.color }}; border: 1px solid {{ ts.border }};">{{ ts.name }}</div>
+            </sc-for>
+          </div>
+
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+            <div style="font-size: 14px; font-weight: 700;">Drum backing track</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <sc-for list="{{ drumTracks }}" as="dt" hint-placeholder-count="5">
+                <div onClick="{{ dt.on }}" style="cursor: pointer; padding: 8px 15px; border-radius: 15px; font-size: 12px; font-weight: 600; background: {{ dt.bg }}; color: {{ dt.color }}; border: 1px solid {{ dt.border }};">{{ dt.name }}</div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== CHORDS ===================== -->
+      <sc-if value="{{ isChords }}">
+        <div data-screen-label="Chord Library" style="position: absolute; inset: 0; overflow-y: auto; padding: 68px 22px 118px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div onClick="{{ nav.tools }}" style="cursor: pointer; width: 40px; height: 40px; border-radius: 50%; background: rgba(23,21,15,0.06); display: flex; align-items: center; justify-content: center;"><div style="width: 9px; height: 9px; border-left: 2px solid #17150F; border-bottom: 2px solid #17150F; transform: rotate(45deg); margin-left: 3px;"></div></div>
+            <div style="font-size: 26px; font-weight: 700;">Chord Library</div>
+          </div>
+
+          <!-- Detector -->
+          <div style="background: linear-gradient(140deg, rgba(147,184,123,0.18), #FFFFFF 60%); border: 1px solid rgba(111,160,94,0.32); border-radius: 22px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(111,160,94,0.16); display: flex; align-items: center; justify-content: center;"><div style="width: 10px; height: 18px; border-radius: 5px; border: 2px solid #4F7A42;"></div></div>
+            <div style="display: flex; flex-direction: column; gap: 2px; flex: 1;">
+              <div style="font-size: 14px; font-weight: 700;">Chord Detector</div>
+              <div style="font-size: 12px; color: rgba(23,21,15,0.5);">Mainkan chord apa pun — AI menebak namanya</div>
+            </div>
+            <div style="font-size: 13px; font-weight: 700; color: #4F7A42;">Dengar ›</div>
+          </div>
+
+          <!-- Selected chord detail -->
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 24px; padding: 20px; display: flex; gap: 20px; align-items: center; box-shadow: 0 8px 24px rgba(95,78,50,0.07);">
+            <div style="position: relative; width: 110px; height: 128px; flex-shrink: 0;">
+              <div style="position: absolute; top: 0; left: 0; right: 0; height: 5px; border-radius: 2px; background: #17150F;"></div>
+              <div style="position: absolute; top: 5px; left: 0; right: 0; bottom: 0; background-image: linear-gradient(to right, rgba(23,21,15,0.3) 1px, transparent 1px), linear-gradient(to bottom, rgba(23,21,15,0.3) 1px, transparent 1px); background-size: 22px 31px; border-right: 1px solid rgba(23,21,15,0.3); border-bottom: 1px solid rgba(23,21,15,0.3);"></div>
+              <sc-for list="{{ selChordDots }}" as="d" hint-placeholder-count="3">
+                <div style="position: absolute; left: {{ d.l }}; top: {{ d.t }}; width: 17px; height: 17px; border-radius: 50%; background: #E07B28; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #FFF8EF;">{{ d.f }}</div>
+              </sc-for>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-size: 34px; font-weight: 800; line-height: 1;">{{ selChordName }}</div>
+              <div style="font-size: 12px; color: rgba(23,21,15,0.5); line-height: 1.5;">{{ selChordTip }}</div>
+              <div style="align-self: flex-start; margin-top: 4px; background: rgba(224,123,40,0.12); border: 1px solid rgba(224,123,40,0.4); color: #C05F16; font-size: 12px; font-weight: 700; border-radius: 14px; padding: 7px 14px; cursor: pointer;">Cek dengan AI</div>
+            </div>
+          </div>
+
+          <!-- Grid -->
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px;">
+            <sc-for list="{{ chordList }}" as="c" hint-placeholder-count="8">
+              <div onClick="{{ c.on }}" style="cursor: pointer; padding: 14px 0 10px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; gap: 6px; background: {{ c.bg }}; border: 1px solid {{ c.border }}; box-shadow: 0 4px 12px rgba(95,78,50,0.05);">
+                <div style="font-size: 17px; font-weight: 800; color: {{ c.color }};">{{ c.name }}</div>
+                <div style="font-size: 10px; color: rgba(23,21,15,0.4);">{{ c.level }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== SONGS ===================== -->
+      <sc-if value="{{ isSongs }}">
+        <div data-screen-label="Song Library" style="position: absolute; inset: 0; overflow-y: auto; padding: 68px 22px 118px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div onClick="{{ nav.tools }}" style="cursor: pointer; width: 40px; height: 40px; border-radius: 50%; background: rgba(23,21,15,0.06); display: flex; align-items: center; justify-content: center;"><div style="width: 9px; height: 9px; border-left: 2px solid #17150F; border-bottom: 2px solid #17150F; transform: rotate(45deg); margin-left: 3px;"></div></div>
+            <div style="font-size: 26px; font-weight: 700;">Songs</div>
+          </div>
+          <div style="font-size: 13px; color: rgba(23,21,15,0.5); margin-top: -8px;">Semua genre · tab auto-scroll + slow-downer</div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <sc-for list="{{ genreChips }}" as="g" hint-placeholder-count="6">
+              <div onClick="{{ g.on }}" style="cursor: pointer; padding: 8px 15px; border-radius: 15px; font-size: 12px; font-weight: 600; background: {{ g.bg }}; color: {{ g.color }}; border: 1px solid {{ g.border }};">{{ g.name }}</div>
+            </sc-for>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 11px;">
+            <sc-for list="{{ songList }}" as="sg" hint-placeholder-count="6">
+              <div onClick="{{ nav.lesson }}" style-hover="border-color: rgba(224,123,40,0.4);" style="cursor: pointer; background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 20px; padding: 15px 16px; display: flex; align-items: center; gap: 13px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+                <div style="width: 44px; height: 44px; border-radius: 14px; background: {{ sg.artBg }}; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: #17150F;">{{ sg.initial }}</div>
+                <div style="display: flex; flex-direction: column; gap: 3px; flex: 1;">
+                  <div style="font-size: 14px; font-weight: 700;">{{ sg.title }}</div>
+                  <div style="font-size: 11px; color: rgba(23,21,15,0.45);">{{ sg.artist }} · {{ sg.genre }}</div>
+                </div>
+                <div style="font-size: 11px; font-weight: 700; color: {{ sg.levelColor }}; border: 1px solid {{ sg.levelBorder }}; border-radius: 12px; padding: 5px 10px;">{{ sg.level }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== TOOLS HUB ===================== -->
+      <sc-if value="{{ isTools }}">
+        <div data-screen-label="Tools" style="position: absolute; inset: 0; overflow-y: auto; padding: 68px 22px 118px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="font-size: 26px; font-weight: 700;">Tools</div>
+          <div style="font-size: 13px; color: rgba(23,21,15,0.5); margin-top: -8px;">Semua alat bantu latihanmu di satu tempat</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 11px;">
+            <sc-for list="{{ toolCards }}" as="tc" hint-placeholder-count="8">
+              <div onClick="{{ tc.on }}" style-hover="border-color: rgba(224,123,40,0.45);" style="cursor: pointer; background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 22px; padding: 18px 16px; display: flex; flex-direction: column; gap: 12px; min-height: 128px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+                <div style="width: 40px; height: 40px; border-radius: 14px; background: {{ tc.iconBg }}; display: flex; align-items: center; justify-content: center;">
+                  <div style="width: 14px; height: 14px; border-radius: {{ tc.iconRadius }}; background: {{ tc.iconColor }};"></div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <div style="font-size: 14px; font-weight: 700;">{{ tc.name }}</div>
+                  <div style="font-size: 11px; line-height: 1.45; color: rgba(23,21,15,0.45);">{{ tc.desc }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== PRACTICE STATS ===================== -->
+      <sc-if value="{{ isPractice }}">
+        <div data-screen-label="Practice Stats" style="position: absolute; inset: 0; overflow-y: auto; padding: 68px 22px 118px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div onClick="{{ nav.home }}" style="cursor: pointer; width: 40px; height: 40px; border-radius: 50%; background: rgba(23,21,15,0.06); display: flex; align-items: center; justify-content: center;"><div style="width: 9px; height: 9px; border-left: 2px solid #17150F; border-bottom: 2px solid #17150F; transform: rotate(45deg); margin-left: 3px;"></div></div>
+            <div style="font-size: 26px; font-weight: 700;">Statistik Latihan</div>
+          </div>
+
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 8px 24px rgba(95,78,50,0.07);">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div style="font-size: 15px; font-weight: 700;">Minggu ini</div>
+              <div style="font-size: 12px; color: rgba(23,21,15,0.45);">28 Jun – 4 Jul</div>
+            </div>
+            <div style="display: flex; align-items: flex-end; justify-content: space-between; height: 120px; padding: 0 4px;">
+              <sc-for list="{{ weekBars }}" as="wb" hint-placeholder-count="7">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 7px;">
+                  <div style="width: 26px; height: {{ wb.h }}px; border-radius: 8px; background: {{ wb.bg }};"></div>
+                  <div style="font-size: 10px; font-weight: 600; color: {{ wb.labelColor }};">{{ wb.day }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+              <div style="font-size: 11px; color: rgba(23,21,15,0.45);">Total jam latihan</div>
+              <div style="font-size: 24px; font-weight: 800;">42<span style="font-size: 13px; font-weight: 500; color: rgba(23,21,15,0.45);">j 18m</span></div>
+              <div style="font-size: 11px; color: #4F7A42; font-weight: 600;">▲ 14% dari bulan lalu</div>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+              <div style="font-size: 11px; color: rgba(23,21,15,0.45);">Akurasi rata-rata</div>
+              <div style="font-size: 24px; font-weight: 800;">87<span style="font-size: 13px; font-weight: 500; color: rgba(23,21,15,0.45);">%</span></div>
+              <div style="font-size: 11px; color: #4F7A42; font-weight: 600;">▲ 5 poin minggu ini</div>
+            </div>
+          </div>
+
+          <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 8px 24px rgba(95,78,50,0.07);">
+            <div style="font-size: 15px; font-weight: 700;">Skill breakdown</div>
+            <sc-for list="{{ skillBars }}" as="sk" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 108px; font-size: 12px; color: rgba(23,21,15,0.6);">{{ sk.name }}</div>
+                <div style="flex: 1; height: 7px; border-radius: 4px; background: rgba(23,21,15,0.07);"><div style="width: {{ sk.pct }}%; height: 100%; border-radius: 4px; background: {{ sk.color }};"></div></div>
+                <div style="width: 30px; text-align: right; font-size: 12px; font-weight: 700;">{{ sk.pct }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== PROFILE ===================== -->
+      <sc-if value="{{ isProfile }}">
+        <div data-screen-label="Profile" style="position: absolute; inset: 0; overflow-y: auto; padding: 68px 22px 118px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 0;">
+            <div style="width: 88px; height: 88px; border-radius: 50%; background: linear-gradient(135deg, #EE9448, #C86416); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: #FFF8EF; border: 3px solid rgba(224,123,40,0.3);">RA</div>
+            <div style="font-size: 21px; font-weight: 700;">Raka Pratama</div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="background: rgba(111,160,94,0.12); border: 1px solid rgba(111,160,94,0.35); color: #4F7A42; font-size: 12px; font-weight: 700; border-radius: 14px; padding: 6px 13px;">Level 7 · Intermediate</div>
+              <div style="background: rgba(201,164,65,0.12); border: 1px solid rgba(201,164,65,0.4); color: #A8842E; font-size: 12px; font-weight: 700; border-radius: 14px; padding: 6px 13px;">2.840 XP</div>
+            </div>
+            <div style="width: 100%; margin-top: 6px;">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: rgba(23,21,15,0.45); margin-bottom: 6px;"><div>Menuju Level 8</div><div>2.840 / 3.500 XP</div></div>
+              <div style="height: 8px; border-radius: 4px; background: rgba(23,21,15,0.07);"><div style="width: 81%; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #E07B28, #C9A441);"></div></div>
+            </div>
+          </div>
+
+          <div style="font-size: 16px; font-weight: 700;">Achievements</div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            <sc-for list="{{ badges }}" as="b" hint-placeholder-count="6">
+              <div style="background: #FFFFFF; border: 1px solid {{ b.border }}; border-radius: 20px; padding: 15px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: {{ b.opacity }}; box-shadow: 0 4px 12px rgba(95,78,50,0.05);">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: {{ b.bg }}; display: flex; align-items: center; justify-content: center;"><div style="width: 14px; height: 14px; transform: rotate(45deg); background: {{ b.iconColor }}; border-radius: 3px;"></div></div>
+                <div style="font-size: 11px; font-weight: 700; text-align: center;">{{ b.name }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 2px; background: #FFFFFF; border: 1px solid rgba(0,0,0,0.06); border-radius: 22px; overflow: hidden; box-shadow: 0 6px 18px rgba(95,78,50,0.06);">
+            <sc-for list="{{ settingRows }}" as="sr" hint-placeholder-count="4">
+              <div style-hover="background: rgba(23,21,15,0.03);" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid rgba(23,21,15,0.05);">
+                <div style="font-size: 14px; font-weight: 600;">{{ sr.name }}</div>
+                <div style="font-size: 13px; color: rgba(23,21,15,0.35);">{{ sr.val }} ›</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===================== BOTTOM NAV ===================== -->
+      <sc-if value="{{ showNav }}">
+        <div style="position: absolute; bottom: 16px; left: 20px; right: 20px; height: 70px; z-index: 30; border-radius: 35px; background: rgba(23,21,15,0.94); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(16px); display: flex; align-items: center; justify-content: space-around; padding: 0 8px; box-shadow: 0 14px 34px rgba(23,21,15,0.35);">
+          <div onClick="{{ nav.home }}" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 56px;">
+            <div style="width: 16px; height: 16px; border: 2px solid {{ tabHome }}; border-radius: 5px;"></div>
+            <div style="font-size: 9px; font-weight: 600; color: {{ tabHome }};">Home</div>
+          </div>
+          <div onClick="{{ nav.lessons }}" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 56px;">
+            <div style="display: flex; flex-direction: column; gap: 3px;"><div style="width: 16px; height: 4px; border-radius: 2px; background: {{ tabLessons }};"></div><div style="width: 16px; height: 4px; border-radius: 2px; background: {{ tabLessons }};"></div><div style="width: 10px; height: 4px; border-radius: 2px; background: {{ tabLessons }};"></div></div>
+            <div style="font-size: 9px; font-weight: 600; color: {{ tabLessons }};">Lessons</div>
+          </div>
+          <div onClick="{{ nav.tuner }}" style="cursor: pointer; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(180deg, #EE9448, #D96A14); display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 24px rgba(217,106,20,0.4); margin-top: -22px; border: 4px solid #F3EEE3;">
+            <div style="width: 26px; height: 26px; border-radius: 50%; border: 2.5px solid #FFF8EF; position: relative; display: flex; justify-content: center;"><div style="width: 2.5px; height: 10px; background: #FFF8EF; border-radius: 1px; transform: rotate(30deg); transform-origin: bottom center; margin-top: 2px;"></div></div>
+          </div>
+          <div onClick="{{ nav.tools }}" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 56px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3px;"><div style="width: 6px; height: 6px; border-radius: 2px; background: {{ tabTools }};"></div><div style="width: 6px; height: 6px; border-radius: 2px; background: {{ tabTools }};"></div><div style="width: 6px; height: 6px; border-radius: 2px; background: {{ tabTools }};"></div><div style="width: 6px; height: 6px; border-radius: 2px; background: {{ tabTools }};"></div></div>
+            <div style="font-size: 9px; font-weight: 600; color: {{ tabTools }};">Tools</div>
+          </div>
+          <div onClick="{{ nav.profile }}" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 56px;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;"><div style="width: 7px; height: 7px; border-radius: 50%; background: {{ tabProfile }};"></div><div style="width: 13px; height: 6px; border-radius: 4px 4px 1px 1px; background: {{ tabProfile }};"></div></div>
+            <div style="font-size: 9px; font-weight: 600; color: {{ tabProfile }};">Profil</div>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: &quot;100%&quot;, &quot;height&quot;: 940}, &quot;startScreen&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;onboarding&quot;, &quot;options&quot;: [&quot;onboarding&quot;, &quot;home&quot;, &quot;tuner&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Prototype&quot;}, &quot;dailyGoalMinutes&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 30, &quot;min&quot;: 10, &quot;max&quot;: 120, &quot;step&quot;: 5, &quot;unit&quot;: &quot;min&quot;, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Prototype&quot;}}">
+class Component extends DCLogic {
+  state = {
+    screen: 'onboarding',
+    tunerString: 'E2',
+    cents: 4,
+    bpm: 96,
+    playing: false,
+    beat: -1,
+    timeSig: '4/4',
+    drum: 'Klik saja',
+    lessonTab: 'Beginner',
+    speed: '1x',
+    chord: 'Am',
+    genre: 'Semua'
+  };
+
+  componentDidMount() {
+    this._tuner = setInterval(() => {
+      if (this.state.screen !== 'tuner') return;
+      const drift = (Math.random() - 0.5) * 10;
+      let c = this.state.cents * 0.75 + drift;
+      c = Math.max(-45, Math.min(45, c));
+      this.setState({ cents: c });
+    }, 160);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this._tuner);
+    clearInterval(this._metro);
+  }
+
+  _startMetro(bpm) {
+    clearInterval(this._metro);
+    const beats = parseInt((this.state.timeSig || '4/4').split('/')[0], 10) || 4;
+    this._metro = setInterval(() => {
+      this.setState(s => ({ beat: (s.beat + 1) % beats }));
+    }, 60000 / bpm);
+  }
+
+  go(screen) {
+    if (screen !== 'metronome' && this.state.playing) {
+      clearInterval(this._metro);
+      this.setState({ playing: false, beat: -1 });
+    }
+    this.setState({ screen });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const startScreen = this.props.startScreen ?? 'onboarding';
+    if (!this._init) { this._init = true; if (startScreen !== 'onboarding') s.screen = startScreen; }
+
+    const ORANGE = '#E07B28', ORANGE_TXT = '#C05F16', GREEN = '#6FA05E', GREEN_TXT = '#4F7A42', DIM = 'rgba(23,21,15,0.45)';
+    const NAV_DIM = 'rgba(246,243,236,0.5)', NAV_ACT = '#F09048';
+    const nav = {
+      home: () => this.go('home'), lessons: () => this.go('lessons'), lesson: () => this.go('lesson'),
+      tuner: () => this.go('tuner'), metronome: () => this.go('metronome'), chords: () => this.go('chords'),
+      songs: () => this.go('songs'), tools: () => this.go('tools'), practice: () => this.go('practice'),
+      profile: () => this.go('profile')
+    };
+
+    // ---- Tuner ----
+    const stringData = [
+      { note: 'E', full: 'E2', hz: '82.4' }, { note: 'A', full: 'A2', hz: '110.0' },
+      { note: 'D', full: 'D3', hz: '146.8' }, { note: 'G', full: 'G3', hz: '196.0' },
+      { note: 'B', full: 'B3', hz: '246.9' }, { note: 'E', full: 'E4', hz: '329.6' }
+    ];
+    const tunerStrings = stringData.map(st => {
+      const act = st.full === s.tunerString;
+      return {
+        note: st.note, hz: st.hz + ' Hz',
+        bg: act ? 'rgba(224,123,40,0.12)' : '#FFFFFF',
+        border: act ? 'rgba(224,123,40,0.5)' : 'rgba(0,0,0,0.07)',
+        color: act ? ORANGE_TXT : '#17150F',
+        on: () => this.setState({ tunerString: st.full, cents: (Math.random() - 0.5) * 60 })
+      };
+    });
+    const cents = Math.round(s.cents);
+    const inTune = Math.abs(cents) <= 5;
+    const cur = stringData.find(x => x.full === s.tunerString);
+    const baseHz = parseFloat(cur.hz);
+
+    // ---- Metronome ----
+    const beats = parseInt(s.timeSig.split('/')[0], 10) || 4;
+    const beatDots = Array.from({ length: beats }, (_, i) => ({
+      bg: s.playing && s.beat === i ? (i === 0 ? ORANGE : GREEN) : 'rgba(23,21,15,0.1)',
+      glow: s.playing && s.beat === i ? '0 0 12px rgba(224,123,40,0.5)' : 'none'
+    }));
+    const tempoNames = [[60,'Largo — sangat lambat'],[76,'Adagio — lambat'],[108,'Andante — sedang'],[132,'Moderato'],[168,'Allegro — cepat'],[221,'Presto — sangat cepat']];
+    const tempoName = (tempoNames.find(t => s.bpm < t[0]) || tempoNames[tempoNames.length-1])[1];
+    const chip = (act) => ({
+      bg: act ? 'rgba(224,123,40,0.12)' : '#FFFFFF',
+      border: act ? 'rgba(224,123,40,0.5)' : 'rgba(0,0,0,0.08)',
+      color: act ? ORANGE_TXT : 'rgba(23,21,15,0.65)'
+    });
+    const timeSigs = ['2/4','3/4','4/4','6/8'].map(name => ({
+      name, ...chip(s.timeSig === name),
+      on: () => { this.setState({ timeSig: name, beat: -1 }, () => { if (this.state.playing) this._startMetro(this.state.bpm); }); }
+    }));
+    const drumTracks = ['Klik saja','Rock 8-beat','Pop groove','Blues shuffle','Jazz swing','Latin'].map(name => ({
+      name, ...chip(s.drum === name), on: () => this.setState({ drum: name })
+    }));
+
+    // ---- Lessons ----
+    const lessonData = {
+      Beginner: [
+        ['Anatomi gitar & cara memegang', '8 min · teori', 'Selesai'],
+        ['Chord dasar: Am, C, D', '14 min · praktik + AI', 'Selesai'],
+        ['Strumming pattern pertama', '12 min · praktik', 'Selesai'],
+        ['Ganti chord dengan cepat', '15 min · praktik + AI', '62%'],
+        ['Lagu pertamamu (3 chord)', '18 min · lagu', 'Terkunci']
+      ],
+      Intermediate: [
+        ['Barre chord: F & Bm', '16 min · praktik + AI', 'Mulai'],
+        ['Fingerpicking pattern', '14 min · praktik', 'Mulai'],
+        ['Pentatonic scale box 1', '15 min · teori + praktik', 'Terkunci'],
+        ['Power chord & palm mute', '12 min · praktik', 'Terkunci']
+      ],
+      Advanced: [
+        ['Sistem CAGED', '20 min · teori', 'Mulai'],
+        ['Improvisasi blues 12-bar', '22 min · praktik + AI', 'Terkunci'],
+        ['Sweep picking dasar', '18 min · praktik', 'Terkunci'],
+        ['Voicing jazz: maj7 & m7b5', '20 min · teori + praktik', 'Terkunci']
+      ]
+    };
+    const lessonTabs = ['Beginner','Intermediate','Advanced'].map(name => ({
+      name, ...chip(s.lessonTab === name), on: () => this.setState({ lessonTab: name })
+    }));
+    const lessons = lessonData[s.lessonTab].map((l, i) => {
+      const done = l[2] === 'Selesai', locked = l[2] === 'Terkunci';
+      return {
+        num: String(i + 1).padStart(2, '0'), title: l[0], meta: l[1], state: l[2],
+        iconBg: done ? 'rgba(111,160,94,0.14)' : locked ? 'rgba(23,21,15,0.05)' : 'rgba(224,123,40,0.13)',
+        iconColor: done ? GREEN_TXT : locked ? DIM : ORANGE_TXT,
+        stateColor: done ? GREEN_TXT : locked ? DIM : ORANGE_TXT
+      };
+    });
+
+    // ---- Lesson player ----
+    const speeds = ['0.5x','0.75x','1x'].map(label => ({
+      label, on: () => this.setState({ speed: label }),
+      bg: s.speed === label ? '#17150F' : 'rgba(23,21,15,0.06)',
+      color: s.speed === label ? '#F6F3EC' : 'rgba(23,21,15,0.6)'
+    }));
+    const tabLines = [
+      { string: 'e', notes: ['0','—','0','—','3','—'] },
+      { string: 'B', notes: ['1','—','0','—','3','—'] },
+      { string: 'G', notes: ['2','—','0','—','0','—'] },
+      { string: 'D', notes: ['2','—','0','—','0','—'] },
+      { string: 'A', notes: ['0','—','2','—','2','—'] },
+      { string: 'E', notes: ['—','—','3','—','3','—'] }
+    ];
+
+    // ---- Chords ----
+    const P = (str, fret) => ({ l: (str * 20) + '%', t: (5 + (fret - 0.5) * 31) + 'px', f: String(fret) });
+    const chordDefs = {
+      'Am':  { level: 'Dasar', tip: 'Chord minor pertama. Jaga jari 1 tetap melengkung agar senar B bunyi bersih.', dots: [P(2,2), P(3,2), P(4,1)] },
+      'C':   { level: 'Dasar', tip: 'Rentangkan jari 3 ke fret 3 senar A. Jangan sentuh senar G.', dots: [P(1,3), P(2,2), P(4,1)] },
+      'G':   { level: 'Dasar', tip: 'Gunakan jari 2-3-4 agar transisi ke C lebih cepat.', dots: [P(0,3), P(1,2), P(5,3)] },
+      'D':   { level: 'Dasar', tip: 'Bentuk segitiga kecil. Hanya petik 4 senar bawah.', dots: [P(3,2), P(4,3), P(5,2)] },
+      'Em':  { level: 'Dasar', tip: 'Chord termudah — dua jari saja. Biarkan semua senar berbunyi.', dots: [P(1,2), P(2,2)] },
+      'E':   { level: 'Dasar', tip: 'Seperti Em plus jari 1 di fret 1 senar G.', dots: [P(1,2), P(2,2), P(3,1)] },
+      'Dm':  { level: 'Dasar', tip: 'Mirip D tapi jari 1 turun ke fret 1 senar e.', dots: [P(3,2), P(4,3), P(5,1)] },
+      'F':   { level: 'Barre', tip: 'Barre penuh fret 1. Mulai dari versi mini (4 senar) dulu.', dots: [P(1,3), P(2,3), P(3,2)] },
+      'Bm':  { level: 'Barre', tip: 'Barre fret 2. Kunci ibu jari di tengah belakang neck.', dots: [P(2,4), P(3,4), P(4,3)] },
+      'A7':  { level: 'Blues', tip: 'Chord dominan untuk blues 12-bar.', dots: [P(2,2), P(4,2)] },
+      'Cmaj7': { level: 'Jazz', tip: 'Warna jazz lembut — seperti C tanpa jari 1.', dots: [P(1,3), P(2,2)] },
+      'Em7': { level: 'Jazz', tip: 'Em dengan satu jari diangkat — terbuka dan luas.', dots: [P(1,2)] }
+    };
+    const chordList = Object.keys(chordDefs).map(name => {
+      const act = name === s.chord;
+      return {
+        name, level: chordDefs[name].level,
+        bg: act ? 'rgba(224,123,40,0.12)' : '#FFFFFF',
+        border: act ? 'rgba(224,123,40,0.5)' : 'rgba(0,0,0,0.07)',
+        color: act ? ORANGE_TXT : '#17150F',
+        on: () => this.setState({ chord: name })
+      };
+    });
+
+    // ---- Songs ----
+    const songData = [
+      ['Wonderwall','Oasis','Pop Rock','Mudah','#C05F16'],
+      ['Perfect','Ed Sheeran','Pop','Mudah','#C05F16'],
+      ['Hotel California','Eagles','Rock','Sedang','#4F7A42'],
+      ['Blackbird','The Beatles','Folk','Sedang','#4F7A42'],
+      ['Tears in Heaven','Eric Clapton','Blues','Sedang','#4F7A42'],
+      ['Sweet Child O\' Mine','Guns N\' Roses','Rock','Sulit','#B8524A'],
+      ['Autumn Leaves','Jazz Standard','Jazz','Sulit','#B8524A'],
+      ['Asturias','Isaac Albéniz','Klasik','Sulit','#B8524A']
+    ];
+    const arts = ['#E8B183','#B9CFA8','#E4CE8F','#A8C7B8','#E0A49E','#CBB7E0'];
+    const genres = ['Semua','Pop','Rock','Folk','Blues','Jazz','Klasik'];
+    const genreChips = genres.map(name => ({
+      name, ...chip(s.genre === name), on: () => this.setState({ genre: name })
+    }));
+    const songList = songData
+      .filter(sd => s.genre === 'Semua' || sd[2].includes(s.genre))
+      .map((sd, i) => ({
+        title: sd[0], artist: sd[1], genre: sd[2], level: sd[3], levelColor: sd[4],
+        levelBorder: ({ Mudah: 'rgba(192,95,22,0.35)', Sedang: 'rgba(79,122,66,0.35)', Sulit: 'rgba(184,82,74,0.35)' })[sd[3]],
+        initial: sd[0][0], artBg: arts[i % arts.length]
+      }));
+
+    // ---- Tools ----
+    const toolCards = [
+      ['Tuner', 'Setem 6 senar dengan gauge presisi ±1 cent', nav.tuner, 'rgba(224,123,40,0.13)', ORANGE, '50%'],
+      ['Metronome', 'BPM 40–220, tap tempo & drum tracks', nav.metronome, 'rgba(111,160,94,0.14)', GREEN, '4px'],
+      ['Chord Library', '500+ chord dengan diagram jari', nav.chords, 'rgba(201,164,65,0.14)', '#C9A441', '4px'],
+      ['Chord Detector', 'AI menebak chord yang kamu mainkan', nav.chords, 'rgba(111,160,94,0.14)', GREEN, '50%'],
+      ['Songs + Slow-downer', 'Pelankan lagu tanpa ubah pitch', nav.songs, 'rgba(224,164,158,0.2)', '#B8524A', '4px'],
+      ['Ear Training', 'Latih telinga: interval, chord & melodi', nav.practice, 'rgba(203,183,224,0.22)', '#8A6FA8', '50%'],
+      ['Jam Tracks', 'Backing track semua genre & kunci', nav.songs, 'rgba(224,123,40,0.13)', ORANGE, '4px'],
+      ['Riff Recorder', 'Rekam ide riff-mu, AI beri notasinya', nav.practice, 'rgba(168,199,184,0.22)', '#5E8A78', '50%']
+    ].map(t => ({ name: t[0], desc: t[1], on: t[2], iconBg: t[3], iconColor: t[4], iconRadius: t[5] }));
+
+    // ---- Practice ----
+    const weekBars = [
+      ['S', 45], ['S', 78], ['R', 30], ['K', 92], ['J', 64], ['S', 0], ['M', 52]
+    ].map((w, i) => ({
+      day: w[0], h: Math.max(w[1], 6),
+      bg: w[1] === 0 ? 'rgba(23,21,15,0.07)' : i === 3 ? ORANGE : 'rgba(224,123,40,0.4)',
+      labelColor: i === 3 ? ORANGE_TXT : DIM
+    }));
+    const skillBars = [
+      { name: 'Chord changes', pct: 84, color: ORANGE },
+      { name: 'Strumming', pct: 76, color: GREEN },
+      { name: 'Fingerpicking', pct: 52, color: '#C9A441' },
+      { name: 'Teori musik', pct: 61, color: '#5E8A78' },
+      { name: 'Ear training', pct: 44, color: '#8A6FA8' }
+    ];
+
+    // ---- Profile ----
+    const badges = [
+      ['Streak 7 hari', true, 'rgba(224,123,40,0.16)', ORANGE],
+      ['10 chord', true, 'rgba(111,160,94,0.16)', GREEN],
+      ['Lagu pertama', true, 'rgba(201,164,65,0.16)', '#C9A441'],
+      ['Barre master', false, 'rgba(23,21,15,0.05)', DIM],
+      ['100 jam', false, 'rgba(23,21,15,0.05)', DIM],
+      ['Perfect pitch', false, 'rgba(23,21,15,0.05)', DIM]
+    ].map(b => ({
+      name: b[0], bg: b[2], iconColor: b[3],
+      border: b[1] ? 'rgba(224,123,40,0.25)' : 'rgba(0,0,0,0.06)',
+      opacity: b[1] ? '1' : '0.55'
+    }));
+    const settingRows = [
+      { name: 'Gitar saya', val: 'Akustik steel' },
+      { name: 'Goal harian', val: (this.props.dailyGoalMinutes ?? 30) + ' menit' },
+      { name: 'Notifikasi latihan', val: '19:00' },
+      { name: 'Kalibrasi tuner', val: 'A = 440 Hz' }
+    ];
+
+    const tab = (k) => (s.screen === k || (k === 'tools' && ['metronome','chords','songs'].includes(s.screen)) || (k === 'lessons' && s.screen === 'lesson') || (k === 'home' && s.screen === 'practice')) ? NAV_ACT : NAV_DIM;
+
+    return {
+      nav,
+      isOnboarding: s.screen === 'onboarding', isHome: s.screen === 'home', isLessons: s.screen === 'lessons',
+      isLesson: s.screen === 'lesson', isTuner: s.screen === 'tuner', isMetronome: s.screen === 'metronome',
+      isChords: s.screen === 'chords', isSongs: s.screen === 'songs', isTools: s.screen === 'tools',
+      isPractice: s.screen === 'practice', isProfile: s.screen === 'profile',
+      showNav: s.screen !== 'onboarding',
+      tabHome: tab('home'), tabLessons: tab('lessons'), tabTools: tab('tools'), tabProfile: tab('profile'),
+      goalWeekMinutes: (this.props.dailyGoalMinutes ?? 30) * 7,
+      // tuner
+      tunerStrings, needleRot: 'rotate(' + (cents * 1.7) + 'deg)',
+      tunerNote: cur.note, tunerCents: (cents > 0 ? '+' : '') + cents,
+      tunerHz: (baseHz * Math.pow(2, cents / 1200)).toFixed(1),
+      tunerStatus: inTune ? 'Pas! Senar sudah setem' : cents > 0 ? 'Sedikit tinggi — kendurkan' : 'Sedikit rendah — kencangkan',
+      tunerStatusColor: inTune ? GREEN_TXT : ORANGE_TXT,
+      // metronome
+      bpm: s.bpm, tempoName, beatDots, timeSigs, drumTracks,
+      playing: s.playing, notPlaying: !s.playing,
+      togglePlay: () => {
+        if (this.state.playing) { clearInterval(this._metro); this.setState({ playing: false, beat: -1 }); }
+        else { this.setState({ playing: true, beat: -1 }); this._startMetro(this.state.bpm); }
+      },
+      setBpm: (e) => { const v = parseInt(e.target.value, 10); this.setState({ bpm: v }); if (this.state.playing) this._startMetro(v); },
+      bpmUp: () => { const v = Math.min(220, this.state.bpm + 1); this.setState({ bpm: v }); if (this.state.playing) this._startMetro(v); },
+      bpmDown: () => { const v = Math.max(40, this.state.bpm - 1); this.setState({ bpm: v }); if (this.state.playing) this._startMetro(v); },
+      tapTempo: () => {
+        const now = Date.now();
+        if (this._lastTap && now - this._lastTap < 2000) {
+          const v = Math.max(40, Math.min(220, Math.round(60000 / (now - this._lastTap))));
+          this.setState({ bpm: v }); if (this.state.playing) this._startMetro(v);
+        }
+        this._lastTap = now;
+      },
+      // lessons
+      lessonTabs, lessons, speeds, tabLines,
+      // chords
+      chordList, selChordName: s.chord, selChordTip: chordDefs[s.chord].tip, selChordDots: chordDefs[s.chord].dots,
+      // songs
+      genreChips, songList,
+      // tools / stats / profile
+      toolCards, weekBars, skillBars, badges, settingRows
+    };
+  }
+}
+</script>
+</body>
+</html>
