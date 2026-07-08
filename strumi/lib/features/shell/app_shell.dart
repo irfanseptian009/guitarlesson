@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
 import '../../data/catalogs/achievements_catalog.dart';
 import '../../data/models/progress_state.dart';
 import '../../providers/app_providers.dart';
@@ -90,7 +90,7 @@ class _AppShellState extends ConsumerState<AppShell> {
             child: Container(
               padding: const EdgeInsets.fromLTRB(26, 30, 26, 24),
               decoration: BoxDecoration(
-                color: AppColors.surfaceDeep,
+                color: context.colors.surfaceDeep,
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(
                     color: achievement.color.withValues(alpha: 0.45)),
@@ -148,7 +148,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                     style: TextStyle(
                         fontSize: 13,
                         height: 1.5,
-                        color: AppColors.creamDim),
+                        color: context.colors.creamDim),
                   ),
                   const SizedBox(height: 20),
                   PrimaryButton(
@@ -171,7 +171,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     ref.listen(progressProvider, (previous, next) => _checkAchievements(next));
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     return DecoratedBox(
-      decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
+      decoration: BoxDecoration(gradient: context.colors.backgroundGradient),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         extendBody: true,
@@ -202,8 +202,9 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     Color tint(int index) =>
-        currentIndex == index ? AppColors.orange : AppColors.creamFaint;
+        currentIndex == index ? colors.orange : colors.creamFaint;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(35),
@@ -213,9 +214,9 @@ class _BottomNav extends StatelessWidget {
           height: 70,
           padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
-            color: AppColors.navBackground,
+            color: colors.navBackground,
             borderRadius: BorderRadius.circular(35),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            border: Border.all(color: colors.cream.withValues(alpha: 0.1)),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x80000000),
@@ -249,9 +250,9 @@ class _BottomNav extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _bar(color, 16),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 2),
                     _bar(color, 16),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 2),
                     _bar(color, 10),
                   ],
                 ),
@@ -374,6 +375,7 @@ class _TunerFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: Transform.translate(
@@ -382,12 +384,12 @@ class _TunerFab extends StatelessWidget {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            gradient: AppColors.buttonGradient,
+            gradient: colors.buttonGradient,
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.navBorderFill, width: 4),
+            border: Border.all(color: colors.navBorderFill, width: 4),
             boxShadow: [
               BoxShadow(
-                color: AppColors.orangeGradientBottom.withValues(alpha: 0.45),
+                color: colors.orangeGradientBottom.withValues(alpha: 0.45),
                 blurRadius: 24,
                 offset: const Offset(0, 10),
               ),
@@ -397,7 +399,7 @@ class _TunerFab extends StatelessWidget {
             child: SizedBox(
               width: 26,
               height: 26,
-              child: CustomPaint(painter: _GaugeIconPainter()),
+              child: CustomPaint(painter: _GaugeIconPainter(colors.onOrange)),
             ),
           ),
         ),
@@ -407,10 +409,14 @@ class _TunerFab extends StatelessWidget {
 }
 
 class _GaugeIconPainter extends CustomPainter {
+  _GaugeIconPainter(this.color);
+
+  final Color color;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.onOrange
+      ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5
       ..strokeCap = StrokeCap.round;
@@ -421,5 +427,6 @@ class _GaugeIconPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _GaugeIconPainter oldDelegate) =>
+      oldDelegate.color != color;
 }

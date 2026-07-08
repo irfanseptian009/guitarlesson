@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:strumi/app/theme/app_theme.dart';
 import 'package:strumi/widgets/glass_card.dart';
 import 'package:strumi/widgets/pill_chip.dart';
 import 'package:strumi/widgets/primary_button.dart';
 
 void main() {
-  Widget wrap(Widget child) =>
-      MaterialApp(home: Scaffold(body: Center(child: child)));
+  Widget wrap(Widget child) => MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(body: Center(child: child)),
+      );
 
   testWidgets('GlassCard renders child and handles taps', (tester) async {
     var tapped = false;

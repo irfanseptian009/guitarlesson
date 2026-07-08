@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../app/theme/app_colors.dart';
+import '../app/theme/app_palette.dart';
 
 /// Conic-gradient progress ring (Home screen weekly-goal card).
 ///
@@ -26,6 +26,7 @@ class ProgressRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return SizedBox(
       width: size,
       height: size,
@@ -33,14 +34,14 @@ class ProgressRing extends StatelessWidget {
         painter: _RingPainter(
           segments: segments,
           thickness: thickness,
-          trackColor: trackColor ?? Colors.white.withValues(alpha: 0.10),
+          trackColor: trackColor ?? colors.cream.withValues(alpha: 0.10),
         ),
         child: Center(
           child: Container(
             width: size - thickness * 2,
             height: size - thickness * 2,
-            decoration: const BoxDecoration(
-              color: AppColors.surfaceDeep,
+            decoration: BoxDecoration(
+              color: colors.surfaceDeep,
               shape: BoxShape.circle,
             ),
             child: Center(child: center),

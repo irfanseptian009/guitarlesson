@@ -8,10 +8,15 @@ class PracticeClock {
   bool _committed = false;
 
   /// Stops the clock and reports elapsed whole seconds exactly once.
+  ///
+  /// Called from callers' `dispose()`, so the provider write is deferred to
+  /// a microtask — Riverpod forbids modifying providers while the widget
+  /// tree is being torn down.
   void commit() {
     if (_committed) return;
     _committed = true;
     _watch.stop();
-    _commit(_watch.elapsed.inSeconds);
+    final seconds = _watch.elapsed.inSeconds;
+    Future.microtask(() => _commit(seconds));
   }
 }

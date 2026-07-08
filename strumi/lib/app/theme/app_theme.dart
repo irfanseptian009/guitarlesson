@@ -1,64 +1,78 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import 'app_colors.dart';
+import 'app_palette.dart';
 
-/// Global [ThemeData] for Strumi (dark, Sora typeface).
+/// Global [ThemeData] for Strumi — light and dark, both using the locally
+/// bundled Sora typeface (no runtime font fetch).
 abstract final class AppTheme {
-  static ThemeData dark() {
+  static ThemeData light() => _build(AppPalette.light);
+
+  static ThemeData dark() => _build(AppPalette.dark);
+
+  static ThemeData _build(AppPalette palette) {
     final base = ThemeData(
-      brightness: Brightness.dark,
+      brightness: palette.brightness,
       useMaterial3: true,
       scaffoldBackgroundColor: Colors.transparent,
-      colorScheme: const ColorScheme.dark(
-        primary: AppColors.orange,
-        secondary: AppColors.blue,
-        surface: AppColors.surfaceDeep,
-        onPrimary: AppColors.onOrange,
-        onSurface: AppColors.cream,
-        error: AppColors.red,
+      colorScheme: ColorScheme(
+        brightness: palette.brightness,
+        primary: palette.orange,
+        onPrimary: palette.onOrange,
+        secondary: palette.blue,
+        onSecondary: palette.onOrange,
+        error: palette.red,
+        onError: palette.onOrange,
+        surface: palette.surfaceDeep,
+        onSurface: palette.cream,
       ),
       splashFactory: InkSparkle.splashFactory,
+      extensions: [palette],
     );
 
-    final textTheme = GoogleFonts.soraTextTheme(base.textTheme).apply(
-      bodyColor: AppColors.cream,
-      displayColor: AppColors.cream,
+    final textTheme = base.textTheme.apply(
+      fontFamily: 'Sora',
+      bodyColor: palette.cream,
+      displayColor: palette.cream,
     );
 
     return base.copyWith(
       textTheme: textTheme,
       sliderTheme: SliderThemeData(
-        activeTrackColor: AppColors.orange,
-        inactiveTrackColor: Colors.white.withValues(alpha: 0.10),
-        thumbColor: AppColors.cream,
-        overlayColor: AppColors.orange.withValues(alpha: 0.15),
+        activeTrackColor: palette.orange,
+        inactiveTrackColor: palette.cream.withValues(alpha: 0.10),
+        thumbColor: palette.cream,
+        overlayColor: palette.orange.withValues(alpha: 0.15),
         trackHeight: 4,
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.surfaceDeep,
+        backgroundColor: palette.surfaceDeep,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.surfaceDeep,
+        backgroundColor: palette.surfaceDeep,
         contentTextStyle: textTheme.bodyMedium,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         // Keep toasts clear of the floating bottom nav.
         insetPadding: const EdgeInsets.fromLTRB(20, 0, 20, 108),
       ),
-      timePickerTheme: const TimePickerThemeData(
-        backgroundColor: AppColors.surfaceDeep,
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: palette.surfaceDeep,
       ),
     );
   }
 
-  static const systemUiOverlay = SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    statusBarBrightness: Brightness.dark,
-    systemNavigationBarColor: AppColors.backgroundBottom,
-    systemNavigationBarIconBrightness: Brightness.light,
-  );
+  static SystemUiOverlayStyle systemUiOverlay(Brightness brightness) {
+    final iconBrightness =
+        brightness == Brightness.dark ? Brightness.light : Brightness.dark;
+    return SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: iconBrightness,
+      statusBarBrightness: brightness,
+      systemNavigationBarColor:
+          brightness == Brightness.dark ? const Color(0xFF0A0D12) : Colors.white,
+      systemNavigationBarIconBrightness: iconBrightness,
+    );
+  }
 }

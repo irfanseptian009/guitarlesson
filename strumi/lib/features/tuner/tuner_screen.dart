@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
 import '../../core/audio/mic_service.dart';
 import '../../core/dsp/yin.dart';
 import '../../core/music/note_utils.dart';
@@ -175,16 +175,16 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
     final Color statusColor;
     if (!_hasSignal) {
       status = 'Petik senar…';
-      statusColor = AppColors.creamDim;
+      statusColor = context.colors.creamDim;
     } else if (inTune) {
       status = 'Pas! Senar sudah setem';
-      statusColor = AppColors.green;
+      statusColor = context.colors.green;
     } else if (_cents > 0) {
       status = 'Sedikit tinggi — kendurkan';
-      statusColor = AppColors.orangeLight;
+      statusColor = context.colors.orangeLight;
     } else {
       status = 'Sedikit rendah — kencangkan';
-      statusColor = AppColors.orangeLight;
+      statusColor = context.colors.orangeLight;
     }
 
     return ScreenScaffold(
@@ -215,8 +215,8 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
           radius: 26,
           padding: const EdgeInsets.fromLTRB(20, 26, 20, 22),
           border: inTune
-              ? AppColors.green.withValues(alpha: 0.55)
-              : AppColors.cardBorder,
+              ? context.colors.green.withValues(alpha: 0.55)
+              : context.colors.cardBorder,
           child: Column(
             children: [
               TweenAnimationBuilder<double>(
@@ -225,7 +225,7 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
                 curve: Curves.easeOut,
                 builder: (context, cents, _) => CustomPaint(
                   size: const Size(260, 140),
-                  painter: _GaugePainter(cents: cents),
+                  painter: _GaugePainter(cents: cents, colors: context.colors),
                 ),
               ),
               const SizedBox(height: 6),
@@ -240,7 +240,7 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: _confirmed ? AppColors.green : statusColor,
+                  color: _confirmed ? context.colors.green : statusColor,
                 ),
               ),
               const SizedBox(height: 6),
@@ -252,7 +252,7 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   fontFamily: 'monospace',
-                  color: AppColors.cream.withValues(alpha: 0.5),
+                  color: context.colors.cream.withValues(alpha: 0.5),
                 ),
               ),
               // Hold-to-confirm progress while the needle sits in the
@@ -271,8 +271,8 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
                         minHeight: 4,
                         backgroundColor:
                             Colors.white.withValues(alpha: 0.10),
-                        valueColor: const AlwaysStoppedAnimation(
-                            AppColors.green),
+                        valueColor: AlwaysStoppedAnimation(
+                            context.colors.green),
                       ),
                     ),
                   ),
@@ -336,16 +336,16 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
                     kTunings.map((t) => t.name).join(' · '),
                     style: TextStyle(
                         fontSize: 11,
-                        color: AppColors.cream.withValues(alpha: 0.5)),
+                        color: context.colors.cream.withValues(alpha: 0.5)),
                   ),
                 ],
               ),
               Text(
                 '${tuning.name} ›',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.orangeLight,
+                  color: context.colors.orangeLight,
                 ),
               ),
             ],
@@ -369,7 +369,7 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = denied ? AppColors.red : AppColors.blue;
+    final color = denied ? context.colors.red : context.colors.blue;
     final label = denied
         ? 'Mic mati · ketuk'
         : manualNote != null
@@ -423,11 +423,11 @@ class _StringButton extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         height: 62,
         decoration: BoxDecoration(
-          color: active ? AppColors.cardFillActive : AppColors.cardFill,
+          color: active ? context.colors.cardFillActive : context.colors.cardFill,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
               color:
-                  active ? AppColors.cardBorderActive : AppColors.cardBorder),
+                  active ? context.colors.cardBorderActive : context.colors.cardBorder),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -437,7 +437,7 @@ class _StringButton extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: active ? AppColors.orangeLight : AppColors.cream,
+                color: active ? context.colors.orangeLight : context.colors.cream,
               ),
             ),
             const SizedBox(height: 2),
@@ -446,7 +446,7 @@ class _StringButton extends StatelessWidget {
               style: TextStyle(
                 fontSize: 9,
                 fontFamily: 'monospace',
-                color: AppColors.creamFaint,
+                color: context.colors.creamFaint,
               ),
             ),
           ],
@@ -458,9 +458,10 @@ class _StringButton extends StatelessWidget {
 
 /// Semicircular tuner gauge: orange/green/blue arc, glowing needle, hub.
 class _GaugePainter extends CustomPainter {
-  _GaugePainter({required this.cents});
+  _GaugePainter({required this.cents, required this.colors});
 
   final double cents;
+  final AppPalette colors;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -475,18 +476,18 @@ class _GaugePainter extends CustomPainter {
       ..strokeCap = StrokeCap.butt;
 
     // Left (flat), middle (in tune), right (sharp) — as in the design.
-    arcPaint.color = AppColors.orange.withValues(alpha: 0.55);
+    arcPaint.color = colors.orange.withValues(alpha: 0.55);
     canvas.drawArc(rect, math.pi, math.pi / 3, false, arcPaint);
-    arcPaint.color = AppColors.green.withValues(alpha: 0.75);
+    arcPaint.color = colors.green.withValues(alpha: 0.75);
     canvas.drawArc(rect, math.pi + math.pi / 3, math.pi / 3, false, arcPaint);
-    arcPaint.color = AppColors.blue.withValues(alpha: 0.55);
+    arcPaint.color = colors.blue.withValues(alpha: 0.55);
     canvas.drawArc(
         rect, math.pi + 2 * math.pi / 3, math.pi / 3, false, arcPaint);
 
     // Needle: rotates ±85° for ±50 cents.
     final angle = (cents * 1.7) * math.pi / 180;
     final needlePaint = Paint()
-      ..color = AppColors.cream
+      ..color = colors.cream
       ..strokeWidth = 4
       ..strokeCap = StrokeCap.round
       ..maskFilter = const MaskFilter.blur(BlurStyle.solid, 2);
@@ -498,7 +499,7 @@ class _GaugePainter extends CustomPainter {
     canvas.drawCircle(
       center,
       11,
-      Paint()..color = AppColors.orange,
+      Paint()..color = colors.orange,
     );
     canvas.drawCircle(
       center,
@@ -506,7 +507,7 @@ class _GaugePainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3
-        ..color = AppColors.surfaceDeep,
+        ..color = colors.surfaceDeep,
     );
 
     // Scale labels.
@@ -517,7 +518,7 @@ class _GaugePainter extends CustomPainter {
           style: TextStyle(
             fontSize: 10,
             fontFamily: 'monospace',
-            color: AppColors.cream.withValues(alpha: 0.4),
+            color: colors.cream.withValues(alpha: 0.4),
           ),
         ),
         textDirection: TextDirection.ltr,
@@ -532,5 +533,5 @@ class _GaugePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _GaugePainter oldDelegate) =>
-      oldDelegate.cents != cents;
+      oldDelegate.cents != cents || oldDelegate.colors != colors;
 }

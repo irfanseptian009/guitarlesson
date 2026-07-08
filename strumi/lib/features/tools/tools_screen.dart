@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/screen_scaffold.dart';
 
@@ -21,27 +21,28 @@ class _Tool {
 class ToolsScreen extends StatelessWidget {
   const ToolsScreen({super.key});
 
-  static final List<_Tool> _tools = [
-    _Tool('Tuner', 'Setem 6 senar dengan gauge presisi ±1 cent',
-        AppColors.orange, true, (c) => c.go('/tuner')),
-    _Tool('Metronome', 'BPM 40–220, tap tempo & drum tracks', AppColors.blue,
-        false, (c) => c.push('/tools/metronome')),
-    _Tool('Chord Library', '26+ chord dengan diagram jari', AppColors.yellow,
-        false, (c) => c.push('/tools/chords')),
-    _Tool('Chord Detector', 'AI menebak chord yang kamu mainkan',
-        AppColors.green, true, (c) => c.push('/tools/chord-detector')),
-    _Tool('Songs + Chart Player', 'Chart chord auto-play + slow-downer',
-        AppColors.red, false, (c) => c.push('/tools/songs')),
-    _Tool('Ear Training', 'Latih telinga: interval, chord & melodi',
-        AppColors.purple, true, (c) => c.push('/tools/ear-training')),
-    _Tool('Jam Tracks', 'Drum backing track semua genre & tempo',
-        AppColors.orange, false, (c) => c.push('/tools/metronome')),
-    _Tool('Riff Recorder', 'Rekam ide riff-mu, AI baca notasinya',
-        AppColors.blue, true, (c) => c.push('/tools/recorder')),
-  ];
+  static List<_Tool> _tools(AppPalette colors) => [
+        _Tool('Tuner', 'Setem 6 senar dengan gauge presisi ±1 cent',
+            colors.orange, true, (c) => c.go('/tuner')),
+        _Tool('Metronome', 'BPM 40–220, tap tempo & drum tracks', colors.blue,
+            false, (c) => c.push('/tools/metronome')),
+        _Tool('Chord Library', '26+ chord dengan diagram jari', colors.yellow,
+            false, (c) => c.push('/tools/chords')),
+        _Tool('Chord Detector', 'AI menebak chord yang kamu mainkan',
+            colors.green, true, (c) => c.push('/tools/chord-detector')),
+        _Tool('Songs + Chart Player', 'Chart chord auto-play + slow-downer',
+            colors.red, false, (c) => c.push('/tools/songs')),
+        _Tool('Ear Training', 'Latih telinga: interval, chord & melodi',
+            colors.purple, true, (c) => c.push('/tools/ear-training')),
+        _Tool('Jam Tracks', 'Drum backing track semua genre & tempo',
+            colors.orange, false, (c) => c.push('/tools/metronome')),
+        _Tool('Riff Recorder', 'Rekam ide riff-mu, AI baca notasinya',
+            colors.blue, true, (c) => c.push('/tools/recorder')),
+      ];
 
   @override
   Widget build(BuildContext context) {
+    final tools = _tools(context.colors);
     return ScreenScaffold(
       gap: 16,
       children: [
@@ -51,19 +52,21 @@ class ToolsScreen extends StatelessWidget {
         ),
         Column(
           children: [
-            for (var row = 0; row < _tools.length; row += 2) ...[
+            for (var row = 0; row < tools.length; row += 2) ...[
               if (row > 0) const SizedBox(height: 11),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(child: _ToolCard(tool: _tools[row])),
-                  const SizedBox(width: 11),
-                  Expanded(
-                    child: row + 1 < _tools.length
-                        ? _ToolCard(tool: _tools[row + 1])
-                        : const SizedBox.shrink(),
-                  ),
-                ],
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: _ToolCard(tool: tools[row])),
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: row + 1 < tools.length
+                          ? _ToolCard(tool: tools[row + 1])
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
               ),
             ],
           ],
@@ -116,7 +119,7 @@ class _ToolCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 height: 1.45,
-                color: AppColors.cream.withValues(alpha: 0.5),
+                color: context.colors.cream.withValues(alpha: 0.5),
               ),
             ),
           ],

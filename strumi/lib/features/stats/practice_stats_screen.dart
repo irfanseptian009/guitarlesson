@@ -122,28 +122,30 @@ class PracticeStatsScreen extends ConsumerWidget {
         ),
 
         // ------------------------------------------------ totals
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: _TotalCard(
-                label: 'Total jam latihan',
-                value: '${progress.totalSeconds ~/ 3600}',
-                unit:
-                    'j ${(progress.totalSeconds % 3600) ~/ 60}m',
-                delta: _weekDelta(thisWeekMinutes, lastWeekMinutes),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _TotalCard(
+                  label: 'Total jam latihan',
+                  value: '${progress.totalSeconds ~/ 3600}',
+                  unit:
+                      'j ${(progress.totalSeconds % 3600) ~/ 60}m',
+                  delta: _weekDelta(thisWeekMinutes, lastWeekMinutes),
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _TotalCard(
-                label: 'Akurasi rata-rata',
-                value: '${progress.averageAccuracy}',
-                unit: '%',
-                delta: _accuracyDelta(progress.accuracyLog),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _TotalCard(
+                  label: 'Akurasi rata-rata',
+                  value: '${progress.averageAccuracy}',
+                  unit: '%',
+                  delta: _accuracyDelta(progress.accuracyLog),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
 
         // -------------------------------------------- category breakdown

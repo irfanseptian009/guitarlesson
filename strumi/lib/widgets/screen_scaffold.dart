@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../app/theme/app_colors.dart';
+import '../app/theme/app_palette.dart';
 import 'fade_slide_in.dart';
 
 /// Height reserved beneath scrollable content so it clears the floating nav.
@@ -66,18 +66,19 @@ class RoundBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return GestureDetector(
       onTap: onTap ?? () => Navigator.of(context).maybePop(),
       child: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.07),
+          color: colors.cream.withValues(alpha: 0.07),
           shape: BoxShape.circle,
         ),
         alignment: Alignment.center,
-        child: const Icon(Icons.arrow_back_ios_new_rounded,
-            size: 16, color: AppColors.cream),
+        child: Icon(Icons.arrow_back_ios_new_rounded,
+            size: 16, color: colors.cream),
       ),
     );
   }
@@ -100,7 +101,7 @@ class ScreenTitle extends StatelessWidget {
         if (subtitle != null) ...[
           const SizedBox(height: 6),
           Text(subtitle!,
-              style: TextStyle(fontSize: 13, color: AppColors.creamDim)),
+              style: TextStyle(fontSize: 13, color: context.colors.creamDim)),
         ],
       ],
     );
@@ -138,7 +139,7 @@ class SubScreenHeader extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     letterSpacing: 1.5,
-                    color: AppColors.cream.withValues(alpha: 0.5),
+                    color: context.colors.cream.withValues(alpha: 0.5),
                   ),
                 ),
               Text(

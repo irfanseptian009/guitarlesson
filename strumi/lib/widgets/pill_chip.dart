@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../app/theme/app_colors.dart';
+import '../app/theme/app_palette.dart';
 import 'pressable_scale.dart';
 
 /// Selectable pill chip with the design's orange active treatment.
@@ -22,6 +22,7 @@ class PillChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return PressableScale(
       onTap: onTap,
       scale: 0.94,
@@ -29,10 +30,10 @@ class PillChip extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.cardFillActive : AppColors.cardFill,
+          color: selected ? colors.cardFillActive : colors.cardFill,
           borderRadius: BorderRadius.circular(15),
           border: Border.all(
-            color: selected ? AppColors.cardBorderActive : AppColors.cardBorder,
+            color: selected ? colors.cardBorderActive : colors.cardBorder,
           ),
         ),
         child: Text(
@@ -41,8 +42,8 @@ class PillChip extends StatelessWidget {
             fontSize: fontSize,
             fontWeight: FontWeight.w600,
             color: selected
-                ? AppColors.orangeLight
-                : AppColors.cream.withValues(alpha: 0.7),
+                ? colors.orangeLight
+                : colors.cream.withValues(alpha: 0.7),
           ),
         ),
       ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
 import '../../core/music/chords.dart';
 import '../../data/catalogs/challenges_catalog.dart';
 import '../../data/catalogs/lessons_catalog.dart';
@@ -55,17 +55,17 @@ class HomeScreen extends ConsumerWidget {
                 Container(
                   width: 46,
                   height: 46,
-                  decoration: const BoxDecoration(
-                    gradient: AppColors.avatarGradient,
+                  decoration: BoxDecoration(
+                    gradient: context.colors.avatarGradient,
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
                   child: Text(
                     settings.initials,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.onOrange,
+                      color: context.colors.onOrange,
                     ),
                   ),
                 ),
@@ -75,7 +75,7 @@ class HomeScreen extends ConsumerWidget {
                   children: [
                     Text(_greeting,
                         style: TextStyle(
-                            fontSize: 12, color: AppColors.creamDim)),
+                            fontSize: 12, color: context.colors.creamDim)),
                     const SizedBox(height: 2),
                     Text(
                       settings.userName,
@@ -89,10 +89,10 @@ class HomeScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
               decoration: BoxDecoration(
-                color: AppColors.orange.withValues(alpha: 0.14),
+                color: context.colors.orange.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                    color: AppColors.orange.withValues(alpha: 0.35)),
+                    color: context.colors.orange.withValues(alpha: 0.35)),
               ),
               child: Row(
                 children: [
@@ -100,10 +100,10 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(width: 6),
                   Text(
                     '${progress.streakDays} hari streak',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.orangeLight,
+                      color: context.colors.orangeLight,
                     ),
                   ),
                 ],
@@ -131,22 +131,22 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 10),
                   Text(
                     'Minggu ini · ${progress.sessionsThisWeek} dari 7 hari',
-                    style: TextStyle(fontSize: 13, color: AppColors.creamDim),
+                    style: TextStyle(fontSize: 13, color: context.colors.creamDim),
                   ),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 18, vertical: 9),
                     decoration: BoxDecoration(
-                      gradient: AppColors.buttonGradient,
+                      gradient: context.colors.buttonGradient,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Lanjut latihan',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.onOrange,
+                        color: context.colors.onOrange,
                       ),
                     ),
                   ),
@@ -154,8 +154,8 @@ class HomeScreen extends ConsumerWidget {
               ),
               ProgressRing(
                 segments: [
-                  (earlierFraction, AppColors.orange),
-                  (todayFraction, AppColors.blue),
+                  (earlierFraction, context.colors.orange),
+                  (todayFraction, context.colors.blue),
                 ],
                 center: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -170,7 +170,7 @@ class HomeScreen extends ConsumerWidget {
                       'goal mingguan',
                       style: TextStyle(
                           fontSize: 10,
-                          color: AppColors.cream.withValues(alpha: 0.5)),
+                          color: context.colors.cream.withValues(alpha: 0.5)),
                     ),
                   ],
                 ),
@@ -184,21 +184,21 @@ class HomeScreen extends ConsumerWidget {
           children: [
             _StatCard(
               label: 'Menit latihan',
-              labelColor: AppColors.orangeLight,
+              labelColor: context.colors.orangeLight,
               value: minutesWeek,
               suffix: '/$weeklyGoal',
             ),
             const SizedBox(width: 10),
             _StatCard(
               label: 'Chord dikuasai',
-              labelColor: AppColors.blue,
+              labelColor: context.colors.blue,
               value: progress.masteredChords.length,
               suffix: '/${kChordCatalog.length}',
             ),
             const SizedBox(width: 10),
             _StatCard(
               label: 'Akurasi AI',
-              labelColor: AppColors.yellow,
+              labelColor: context.colors.yellow,
               value: progress.averageAccuracy,
               suffix: '%',
             ),
@@ -212,11 +212,11 @@ class HomeScreen extends ConsumerWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppColors.blue.withValues(alpha: 0.14),
+                context.colors.blue.withValues(alpha: 0.14),
                 Colors.white.withValues(alpha: 0.04),
               ],
             ),
-            border: AppColors.blue.withValues(alpha: 0.25),
+            border: context.colors.blue.withValues(alpha: 0.25),
             onTap: () => context.push('/lessons/${nextLesson.id}'),
             child: Row(
               children: [
@@ -224,23 +224,23 @@ class HomeScreen extends ConsumerWidget {
                   width: 54,
                   height: 54,
                   decoration: BoxDecoration(
-                    color: AppColors.blue.withValues(alpha: 0.18),
+                    color: context.colors.blue.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(18),
                   ),
-                  child: const Icon(Icons.play_arrow_rounded,
-                      color: AppColors.blue, size: 30),
+                  child: Icon(Icons.play_arrow_rounded,
+                      color: context.colors.blue, size: 30),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'LANJUTKAN LESSON',
                         style: TextStyle(
                           fontSize: 11,
                           letterSpacing: 1.5,
-                          color: AppColors.blue,
+                          color: context.colors.blue,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -256,8 +256,8 @@ class HomeScreen extends ConsumerWidget {
                           minHeight: 5,
                           backgroundColor:
                               Colors.white.withValues(alpha: 0.10),
-                          valueColor: const AlwaysStoppedAnimation(
-                              AppColors.blue),
+                          valueColor: AlwaysStoppedAnimation(
+                              context.colors.blue),
                         ),
                       ),
                     ],
@@ -266,10 +266,10 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Text(
                   '${(progress.progressOf(nextLesson.id) * 100).round()}%',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.blue,
+                    color: context.colors.blue,
                   ),
                 ),
               ],
@@ -292,7 +292,7 @@ class HomeScreen extends ConsumerWidget {
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: AppColors.yellow,
+                            color: context.colors.yellow,
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -305,9 +305,9 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   Text(
                     '+${challenge.xp} XP',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.yellow,
+                      color: context.colors.yellow,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -319,7 +319,7 @@ class HomeScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 13,
                   height: 1.55,
-                  color: AppColors.cream.withValues(alpha: 0.65),
+                  color: context.colors.cream.withValues(alpha: 0.65),
                 ),
               ),
               const SizedBox(height: 12),
@@ -334,8 +334,8 @@ class HomeScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: progress.challengeDoneToday
-                          ? AppColors.green.withValues(alpha: 0.45)
-                          : AppColors.yellow.withValues(alpha: 0.45),
+                          ? context.colors.green.withValues(alpha: 0.45)
+                          : context.colors.yellow.withValues(alpha: 0.45),
                     ),
                   ),
                   child: Text(
@@ -346,8 +346,8 @@ class HomeScreen extends ConsumerWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: progress.challengeDoneToday
-                          ? AppColors.green
-                          : AppColors.yellow,
+                          ? context.colors.green
+                          : context.colors.yellow,
                     ),
                   ),
                 ),
@@ -364,11 +364,11 @@ class HomeScreen extends ConsumerWidget {
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
             GestureDetector(
               onTap: () => context.go('/tools'),
-              child: const Text(
+              child: Text(
                 'Lihat semua',
                 style: TextStyle(
                   fontSize: 13,
-                  color: AppColors.orangeLight,
+                  color: context.colors.orangeLight,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -456,7 +456,7 @@ class _StatCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.cream.withValues(alpha: 0.5),
+                      color: context.colors.cream.withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -518,12 +518,12 @@ class _PulseDotState extends State<_PulseDot>
         width: 8,
         height: 8,
         decoration: BoxDecoration(
-          color: AppColors.orange,
+          color: context.colors.orange,
           shape: BoxShape.circle,
           boxShadow: widget.active
               ? [
                   BoxShadow(
-                    color: AppColors.orange.withValues(alpha: 0.7),
+                    color: context.colors.orange.withValues(alpha: 0.7),
                     blurRadius: 8,
                   ),
                 ]
@@ -567,7 +567,7 @@ class _QuickToolCard extends StatelessWidget {
                 subtitle,
                 style: TextStyle(
                     fontSize: 11,
-                    color: AppColors.cream.withValues(alpha: 0.5)),
+                    color: context.colors.cream.withValues(alpha: 0.5)),
               ),
             ],
           ),
@@ -588,7 +588,7 @@ class _TunerGlyph extends StatelessWidget {
       height: 38,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.orange, width: 2),
+        border: Border.all(color: context.colors.orange, width: 2),
       ),
       child: Stack(
         alignment: Alignment.center,
@@ -601,7 +601,7 @@ class _TunerGlyph extends StatelessWidget {
                 width: 2,
                 height: 13,
                 decoration: BoxDecoration(
-                  color: AppColors.orange,
+                  color: context.colors.orange,
                   borderRadius: BorderRadius.circular(1),
                 ),
               ),
@@ -612,8 +612,8 @@ class _TunerGlyph extends StatelessWidget {
             child: Container(
               width: 5,
               height: 5,
-              decoration: const BoxDecoration(
-                  color: AppColors.orange, shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                  color: context.colors.orange, shape: BoxShape.circle),
             ),
           ),
         ],
@@ -634,7 +634,7 @@ class _MetronomeGlyph extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 5),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.blue, width: 2),
+        border: Border.all(color: context.colors.blue, width: 2),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -646,7 +646,7 @@ class _MetronomeGlyph extends StatelessWidget {
               height: h,
               margin: const EdgeInsets.symmetric(horizontal: 1.5),
               decoration: BoxDecoration(
-                color: AppColors.blue,
+                color: context.colors.blue,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),

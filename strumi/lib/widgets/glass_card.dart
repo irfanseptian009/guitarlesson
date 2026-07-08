@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../app/theme/app_colors.dart';
+import '../app/theme/app_palette.dart';
 import 'pressable_scale.dart';
 
 /// Translucent card used across every Strumi screen
@@ -27,14 +27,15 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final card = AnimatedContainer(
       duration: const Duration(milliseconds: 150),
       padding: padding,
       decoration: BoxDecoration(
-        color: gradient == null ? (fill ?? AppColors.cardFill) : null,
+        color: gradient == null ? (fill ?? colors.cardFill) : null,
         gradient: gradient,
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: border ?? AppColors.cardBorder),
+        border: Border.all(color: border ?? colors.cardBorder),
       ),
       child: child,
     );

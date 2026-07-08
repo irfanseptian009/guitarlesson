@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
 import '../../core/music/tunings.dart';
 import '../../data/catalogs/achievements_catalog.dart';
 import '../../data/models/app_settings.dart';
@@ -40,19 +40,19 @@ class ProfileScreen extends ConsumerWidget {
               width: 88,
               height: 88,
               decoration: BoxDecoration(
-                gradient: AppColors.avatarGradient,
+                gradient: context.colors.avatarGradient,
                 shape: BoxShape.circle,
                 border: Border.all(
-                    color: AppColors.orange.withValues(alpha: 0.3),
+                    color: context.colors.orange.withValues(alpha: 0.3),
                     width: 3),
               ),
               alignment: Alignment.center,
               child: Text(
                 settings.initials,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.onOrange,
+                  color: context.colors.onOrange,
                 ),
               ),
             ),
@@ -67,12 +67,12 @@ class ProfileScreen extends ConsumerWidget {
                 _Pill(
                   label:
                       'Level ${progress.level} · ${progress.levelTitle}',
-                  color: AppColors.blue,
+                  color: context.colors.blue,
                 ),
                 const SizedBox(width: 8),
                 _Pill(
                   label: '${_formatXp(progress.xp)} XP',
-                  color: AppColors.yellow,
+                  color: context.colors.yellow,
                 ),
               ],
             ),
@@ -83,13 +83,13 @@ class ProfileScreen extends ConsumerWidget {
                 Text('Menuju Level ${progress.level + 1}',
                     style: TextStyle(
                         fontSize: 11,
-                        color: AppColors.cream.withValues(alpha: 0.5))),
+                        color: context.colors.cream.withValues(alpha: 0.5))),
                 Text(
                   '${_formatXp(progress.xpIntoLevel)} / '
                   '${_formatXp(progress.xpToNextLevel)} XP',
                   style: TextStyle(
                       fontSize: 11,
-                      color: AppColors.cream.withValues(alpha: 0.5)),
+                      color: context.colors.cream.withValues(alpha: 0.5)),
                 ),
               ],
             ),
@@ -104,9 +104,9 @@ class ProfileScreen extends ConsumerWidget {
                     FractionallySizedBox(
                       widthFactor: xpFraction,
                       child: Container(
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [AppColors.orange, AppColors.yellow],
+                            colors: [context.colors.orange, context.colors.yellow],
                           ),
                         ),
                       ),
@@ -148,6 +148,20 @@ class ProfileScreen extends ConsumerWidget {
           child: Column(
             children: [
               _SettingRow(
+                name: 'Mode gelap',
+                value: settings.isDarkMode ? 'Aktif' : 'Nonaktif',
+                extra: Switch(
+                  value: settings.isDarkMode,
+                  activeThumbColor: context.colors.orange,
+                  onChanged: (v) => ref
+                      .read(settingsProvider.notifier)
+                      .update((s) => s.copyWith(isDarkMode: v)),
+                ),
+                onTap: () => ref
+                    .read(settingsProvider.notifier)
+                    .update((s) => s.copyWith(isDarkMode: !s.isDarkMode)),
+              ),
+              _SettingRow(
                 name: 'Nama',
                 value: settings.userName,
                 onTap: () => _editName(context, ref, settings),
@@ -170,7 +184,7 @@ class ProfileScreen extends ConsumerWidget {
                     : 'Nonaktif',
                 extra: Switch(
                   value: settings.reminderEnabled,
-                  activeThumbColor: AppColors.orange,
+                  activeThumbColor: context.colors.orange,
                   onChanged: (v) => ref
                       .read(settingsProvider.notifier)
                       .update((s) => s.copyWith(reminderEnabled: v)),
@@ -208,7 +222,7 @@ class ProfileScreen extends ConsumerWidget {
 
         Center(
           child: Text('Strumi 1.1.0 · dibuat dengan Flutter',
-              style: TextStyle(fontSize: 11, color: AppColors.creamGhost)),
+              style: TextStyle(fontSize: 11, color: context.colors.creamGhost)),
         ),
       ],
     );
@@ -229,15 +243,15 @@ class ProfileScreen extends ConsumerWidget {
               'Semua audio disintesis langsung di perangkat; analisis '
               'suara (YIN & chromagram) berjalan offline.',
               style: TextStyle(
-                  fontSize: 13, height: 1.6, color: AppColors.creamDim),
+                  fontSize: 13, height: 1.6, color: context.colors.creamDim),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Tutup',
-                style: TextStyle(color: AppColors.orangeLight)),
+            child: Text('Tutup',
+                style: TextStyle(color: context.colors.orangeLight)),
           ),
         ],
       ),
@@ -254,7 +268,7 @@ class ProfileScreen extends ConsumerWidget {
           'XP, streak, lesson, chord dikuasai, dan statistik akan dihapus '
           'permanen. Pengaturan tetap tersimpan.',
           style: TextStyle(
-              fontSize: 13, height: 1.5, color: AppColors.creamDim),
+              fontSize: 13, height: 1.5, color: context.colors.creamDim),
         ),
         actions: [
           TextButton(
@@ -263,7 +277,7 @@ class ProfileScreen extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Reset', style: TextStyle(color: AppColors.red)),
+            child: Text('Reset', style: TextStyle(color: context.colors.red)),
           ),
         ],
       ),
@@ -292,8 +306,8 @@ class ProfileScreen extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Simpan',
-                style: TextStyle(color: AppColors.orangeLight)),
+            child: Text('Simpan',
+                style: TextStyle(color: context.colors.orangeLight)),
           ),
         ],
       ),
@@ -326,8 +340,8 @@ class ProfileScreen extends ConsumerWidget {
                 option,
                 style: TextStyle(
                   color: option == settings.guitarType
-                      ? AppColors.orangeLight
-                      : AppColors.cream,
+                      ? context.colors.orangeLight
+                      : context.colors.cream,
                   fontWeight: option == settings.guitarType
                       ? FontWeight.w700
                       : FontWeight.w400,
@@ -374,8 +388,8 @@ class ProfileScreen extends ConsumerWidget {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, minutes),
-              child: const Text('Simpan',
-                  style: TextStyle(color: AppColors.orangeLight)),
+              child: Text('Simpan',
+                  style: TextStyle(color: context.colors.orangeLight)),
             ),
           ],
         ),
@@ -434,8 +448,8 @@ class ProfileScreen extends ConsumerWidget {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, a4),
-              child: const Text('Simpan',
-                  style: TextStyle(color: AppColors.orangeLight)),
+              child: Text('Simpan',
+                  style: TextStyle(color: context.colors.orangeLight)),
             ),
           ],
         ),
@@ -494,11 +508,11 @@ class _AchievementTile extends StatelessWidget {
           padding:
               const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
           decoration: BoxDecoration(
-            color: AppColors.cardFill,
+            color: context.colors.cardFill,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: unlocked
-                  ? AppColors.orange.withValues(alpha: 0.25)
+                  ? context.colors.orange.withValues(alpha: 0.25)
                   : Colors.white.withValues(alpha: 0.07),
             ),
           ),
@@ -523,7 +537,7 @@ class _AchievementTile extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: unlocked
                           ? achievement.color
-                          : AppColors.creamFaint,
+                          : context.colors.creamFaint,
                       borderRadius: BorderRadius.circular(3),
                     ),
                   ),
@@ -583,7 +597,7 @@ class _SettingRow extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: destructive ? AppColors.red : AppColors.cream,
+                  color: destructive ? context.colors.red : context.colors.cream,
                 ),
               ),
             ),
@@ -593,8 +607,8 @@ class _SettingRow extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 color: destructive
-                    ? AppColors.red.withValues(alpha: 0.7)
-                    : AppColors.cream.withValues(alpha: 0.4),
+                    ? context.colors.red.withValues(alpha: 0.7)
+                    : context.colors.cream.withValues(alpha: 0.4),
               ),
             ),
           ],

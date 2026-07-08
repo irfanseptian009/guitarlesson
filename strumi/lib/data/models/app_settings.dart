@@ -16,6 +16,7 @@ class AppSettings {
     this.metronomeBpm = 96,
     this.metronomeSignatureIndex = 2,
     this.metronomeStyleIndex = 0,
+    this.isDarkMode = false,
   });
 
   final bool onboardingDone;
@@ -36,6 +37,9 @@ class AppSettings {
   final int metronomeBpm;
   final int metronomeSignatureIndex;
   final int metronomeStyleIndex;
+
+  /// True = dark palette. Defaults to false (light is the default theme).
+  final bool isDarkMode;
 
   int get weeklyGoalMinutes => dailyGoalMinutes * 7;
 
@@ -63,6 +67,7 @@ class AppSettings {
     int? metronomeBpm,
     int? metronomeSignatureIndex,
     int? metronomeStyleIndex,
+    bool? isDarkMode,
   }) {
     return AppSettings(
       onboardingDone: onboardingDone ?? this.onboardingDone,
@@ -78,6 +83,7 @@ class AppSettings {
       metronomeSignatureIndex:
           metronomeSignatureIndex ?? this.metronomeSignatureIndex,
       metronomeStyleIndex: metronomeStyleIndex ?? this.metronomeStyleIndex,
+      isDarkMode: isDarkMode ?? this.isDarkMode,
     );
   }
 
@@ -94,6 +100,7 @@ class AppSettings {
         'metronomeBpm': metronomeBpm,
         'metronomeSignatureIndex': metronomeSignatureIndex,
         'metronomeStyleIndex': metronomeStyleIndex,
+        'isDarkMode': isDarkMode,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
@@ -110,5 +117,6 @@ class AppSettings {
         metronomeSignatureIndex:
             json['metronomeSignatureIndex'] as int? ?? 2,
         metronomeStyleIndex: json['metronomeStyleIndex'] as int? ?? 0,
+        isDarkMode: json['isDarkMode'] as bool? ?? false,
       );
 }

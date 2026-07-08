@@ -162,14 +162,16 @@ class _DailyChallengeScreenState
         ),
 
         // ------------------------------------------------ the three chords
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (var i = 0; i < _challenge.chords.length; i++) ...[
-              if (i > 0) const SizedBox(width: 10),
-              Expanded(child: _chordCard(i)),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < _challenge.chords.length; i++) ...[
+                if (i > 0) const SizedBox(width: 10),
+                Expanded(child: _chordCard(i)),
+              ],
             ],
-          ],
+          ),
         ),
 
         // ------------------------------------------------ progress / result
