@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
+import '../../core/i18n/strings.dart';
 import '../../core/audio/chord_listener.dart';
 import '../../core/audio/sound_bank.dart';
 import '../../core/dsp/chroma.dart';
@@ -110,7 +111,7 @@ class _DailyChallengeScreenState
     if (!ok) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Izin mikrofon dibutuhkan.')));
+            SnackBar(content: Text(context.s.micNeeded)));
       }
       return;
     }
@@ -140,23 +141,24 @@ class _DailyChallengeScreenState
             radius: 18,
             padding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            border: AppColors.green.withValues(alpha: 0.4),
-            child: const Text(
-              'Sudah selesai hari ini ✓ — latihan ulang tidak menambah XP',
+            border: context.colors.green.withValues(alpha: 0.4),
+            child: Text(
+              context.s.alreadyDoneToday,
               style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.green),
+                  color: context.colors.green),
             ),
           ),
         GlassCard(
           radius: 22,
           child: Text(
-            _challenge.description,
+            context.s
+                .challengeDesc(_challenge.title, _challenge.targetCycles),
             style: TextStyle(
               fontSize: 13,
               height: 1.55,
-              color: AppColors.cream.withValues(alpha: 0.65),
+              color: context.colors.cream.withValues(alpha: 0.65),
             ),
           ),
         ),
@@ -179,7 +181,7 @@ class _DailyChallengeScreenState
           GlassCard(
             radius: 24,
             padding: const EdgeInsets.all(26),
-            border: AppColors.yellow.withValues(alpha: 0.45),
+            border: context.colors.yellowDeep.withValues(alpha: 0.45),
             child: Column(
               children: [
                 Transform.rotate(
@@ -188,27 +190,27 @@ class _DailyChallengeScreenState
                     width: 22,
                     height: 22,
                     decoration: BoxDecoration(
-                      color: AppColors.yellow,
+                      color: context.colors.yellowDeep,
                       borderRadius: BorderRadius.circular(5),
                     ),
                   ),
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Challenge selesai! +${_challenge.xp} XP',
+                  context.s.challengeDone(_challenge.xp),
                   style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Rata-rata kebersihan chord: '
+                  '${context.s.avgCleanliness}'
                   '${_scores.isEmpty ? 0 : (_scores.reduce((a, b) => a + b) / _scores.length).round()}%',
                   style:
-                      TextStyle(fontSize: 12, color: AppColors.creamDim),
+                      TextStyle(fontSize: 12, color: context.colors.creamDim),
                 ),
                 const SizedBox(height: 18),
                 PrimaryButton(
-                  label: 'KEMBALI',
+                  label: context.s.back,
                   height: 46,
                   fontSize: 13,
                   onTap: () => context.pop(),
@@ -228,33 +230,33 @@ class _DailyChallengeScreenState
                       fontSize: 44, fontWeight: FontWeight.w800, height: 1),
                 ),
                 const SizedBox(height: 4),
-                Text('siklus selesai',
+                Text(context.s.cyclesDone,
                     style: TextStyle(
-                        fontSize: 11, color: AppColors.creamDim)),
+                        fontSize: 11, color: context.colors.creamDim)),
                 const SizedBox(height: 14),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: _cycles / _challenge.targetCycles,
                     minHeight: 8,
-                    backgroundColor: Colors.white.withValues(alpha: 0.1),
+                    backgroundColor: context.colors.cream.withValues(alpha: 0.1),
                     valueColor:
-                        const AlwaysStoppedAnimation(AppColors.orange),
+                        AlwaysStoppedAnimation(context.colors.orange),
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   !_running
-                      ? 'Tekan mulai, lalu mainkan siklus chord-nya'
+                      ? context.s.pressStartCycle
                       : _wrongChord != null
-                          ? 'Terdeteksi $_wrongChord — target $_targetChord'
-                          : 'Mainkan: $_targetChord',
+                          ? context.s.detectedVsTarget(_wrongChord ?? '', _targetChord)
+                          : context.s.playTarget(_targetChord),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: _wrongChord != null
-                        ? AppColors.orangeLight
-                        : AppColors.blue,
+                        ? context.colors.orangeLight
+                        : context.colors.blue,
                   ),
                 ),
               ],
@@ -263,7 +265,7 @@ class _DailyChallengeScreenState
 
         if (!_finished)
           PrimaryButton(
-            label: _running ? 'BERHENTI' : 'MULAI CHALLENGE',
+            label: _running ? context.s.stop : context.s.startChallengeCta,
             onTap: () => unawaited(_toggle()),
           ),
       ],
@@ -278,12 +280,12 @@ class _DailyChallengeScreenState
     final Color border;
     Color? fill;
     if (isTarget) {
-      border = AppColors.cardBorderActive;
-      fill = AppColors.orange.withValues(alpha: 0.10);
+      border = context.colors.cardBorderActive;
+      fill = context.colors.orange.withValues(alpha: 0.10);
     } else if (isDone) {
-      border = AppColors.green.withValues(alpha: 0.45);
+      border = context.colors.green.withValues(alpha: 0.45);
     } else {
-      border = AppColors.cardBorder;
+      border = context.colors.cardBorder;
     }
 
     return GlassCard(
@@ -303,8 +305,8 @@ class _DailyChallengeScreenState
                       fontSize: 14, fontWeight: FontWeight.w800)),
               if (isDone) ...[
                 const SizedBox(width: 4),
-                const Icon(Icons.check_rounded,
-                    size: 14, color: AppColors.green),
+                Icon(Icons.check_rounded,
+                    size: 14, color: context.colors.green),
               ],
             ],
           ),

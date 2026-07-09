@@ -3,8 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
 import '../../core/audio/metronome_engine.dart';
+import '../../core/i18n/strings.dart';
 import '../../core/utils/practice_clock.dart';
 import '../../data/models/progress_state.dart';
 import '../../providers/app_providers.dart';
@@ -42,13 +43,20 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
     final settings = ref.read(settingsProvider);
     _engine
       ..bpm = settings.metronomeBpm
-      ..signature = TimeSignature.values[settings.metronomeSignatureIndex
-          .clamp(0, TimeSignature.values.length - 1)]
-      ..style = DrumStyle.values[settings.metronomeStyleIndex
-          .clamp(0, DrumStyle.values.length - 1)];
+      ..signature =
+          TimeSignature.values[settings.metronomeSignatureIndex.clamp(
+            0,
+            TimeSignature.values.length - 1,
+          )]
+      ..style =
+          DrumStyle.values[settings.metronomeStyleIndex.clamp(
+            0,
+            DrumStyle.values.length - 1,
+          )];
     final progress = ref.read(progressProvider.notifier);
     _clock = PracticeClock(
-        (s) => progress.addPracticeSeconds(PracticeCategory.metronome, s));
+      (s) => progress.addPracticeSeconds(PracticeCategory.metronome, s),
+    );
   }
 
   @override
@@ -60,12 +68,17 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
   }
 
   void _persist() {
-    ref.read(settingsProvider.notifier).update((s) => s.copyWith(
-          metronomeBpm: _engine.bpm,
-          metronomeSignatureIndex:
-              TimeSignature.values.indexOf(_engine.signature),
-          metronomeStyleIndex: DrumStyle.values.indexOf(_engine.style),
-        ));
+    ref
+        .read(settingsProvider.notifier)
+        .update(
+          (s) => s.copyWith(
+            metronomeBpm: _engine.bpm,
+            metronomeSignatureIndex: TimeSignature.values.indexOf(
+              _engine.signature,
+            ),
+            metronomeStyleIndex: DrumStyle.values.indexOf(_engine.style),
+          ),
+        );
   }
 
   void _togglePlay() {
@@ -85,19 +98,21 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
     _persist();
   }
 
-  String get _tempoName => switch (_engine.bpm) {
-        < 60 => 'Largo — sangat lambat',
-        < 76 => 'Adagio — lambat',
-        < 108 => 'Andante — sedang',
-        < 132 => 'Moderato',
-        < 168 => 'Allegro — cepat',
-        _ => 'Presto — sangat cepat',
-      };
+  String get _tempoBase => switch (_engine.bpm) {
+    < 60 => 'Largo',
+    < 76 => 'Adagio',
+    < 108 => 'Andante',
+    < 132 => 'Moderato',
+    < 168 => 'Allegro',
+    _ => 'Presto',
+  };
 
   void _setBpm(int bpm) => setState(() => _engine.bpm = bpm);
 
   @override
   Widget build(BuildContext context) {
+    final s = context.s;
+    final tempoName = s.tempoName(_tempoBase);
     return ScreenScaffold(
       children: [
         const SubScreenHeader(title: 'Metronome'),
@@ -108,10 +123,12 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
           child: Column(
             children: [
-              _Pendulum(
-                playing: _engine.isPlaying,
-                beat: _beat,
-                bpm: _engine.bpm,
+              RepaintBoundary(
+                child: _Pendulum(
+                  playing: _engine.isPlaying,
+                  beat: _beat,
+                  bpm: _engine.bpm,
+                ),
               ),
               const SizedBox(height: 8),
               Row(
@@ -119,18 +136,21 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Text('${_engine.bpm}',
-                      style: const TextStyle(
-                          fontSize: 72,
-                          fontWeight: FontWeight.w800,
-                          height: 1)),
+                  Text(
+                    '${_engine.bpm}',
+                    style: const TextStyle(
+                      fontSize: 72,
+                      fontWeight: FontWeight.w800,
+                      height: 1,
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   Text(
-                    'BPM',
+                    s.bpmLabel,
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.cream.withValues(alpha: 0.5),
+                      color: context.colors.cream.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -138,13 +158,13 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
               const SizedBox(height: 10),
               Text(
                 _engine.isPlaying
-                    ? '$_tempoName · '
-                        '${(_elapsedSeconds ~/ 60).toString().padLeft(2, '0')}:'
-                        '${(_elapsedSeconds % 60).toString().padLeft(2, '0')}'
-                    : _tempoName,
-                style: const TextStyle(
+                    ? '$tempoName · '
+                          '${(_elapsedSeconds ~/ 60).toString().padLeft(2, '0')}:'
+                          '${(_elapsedSeconds % 60).toString().padLeft(2, '0')}'
+                    : tempoName,
+                style: TextStyle(
                   fontSize: 13,
-                  color: AppColors.orangeLight,
+                  color: context.colors.orangeLight,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -152,7 +172,9 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
               Row(
                 children: [
                   _RoundStepButton(
-                      label: '−', onTap: () => _setBpm(_engine.bpm - 1)),
+                    label: '−',
+                    onTap: () => _setBpm(_engine.bpm - 1),
+                  ),
                   Expanded(
                     child: Slider(
                       min: MetronomeEngine.minBpm.toDouble(),
@@ -163,7 +185,9 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
                     ),
                   ),
                   _RoundStepButton(
-                      label: '+', onTap: () => _setBpm(_engine.bpm + 1)),
+                    label: '+',
+                    onTap: () => _setBpm(_engine.bpm + 1),
+                  ),
                 ],
               ),
               const SizedBox(height: 18),
@@ -179,13 +203,16 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: _engine.isPlaying && _beat == i
-                            ? (i == 0 ? AppColors.orange : AppColors.blue)
-                            : Colors.white.withValues(alpha: 0.12),
+                            ? (i == 0
+                                  ? context.colors.orange
+                                  : context.colors.blue)
+                            : context.colors.cream.withValues(alpha: 0.12),
                         boxShadow: _engine.isPlaying && _beat == i && i == 0
                             ? [
                                 BoxShadow(
-                                  color: AppColors.orange
-                                      .withValues(alpha: 0.6),
+                                  color: context.colors.orange.withValues(
+                                    alpha: 0.6,
+                                  ),
                                   blurRadius: 12,
                                 ),
                               ]
@@ -205,11 +232,11 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
                       width: 74,
                       height: 74,
                       decoration: BoxDecoration(
-                        gradient: AppColors.buttonGradient,
+                        gradient: context.colors.buttonGradient,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.orangeGradientBottom
+                            color: context.colors.orangeGradientBottom
                                 .withValues(alpha: 0.4),
                             blurRadius: 30,
                             offset: const Offset(0, 12),
@@ -220,7 +247,7 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
                         _engine.isPlaying
                             ? Icons.pause_rounded
                             : Icons.play_arrow_rounded,
-                        color: AppColors.onOrange,
+                        color: context.colors.onOrange,
                         size: 40,
                       ),
                     ),
@@ -237,13 +264,16 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(23),
                         border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.18)),
+                          color: context.colors.cream.withValues(alpha: 0.18),
+                        ),
                       ),
                       alignment: Alignment.center,
-                      child: const Text(
-                        'TAP TEMPO',
-                        style: TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w700),
+                      child: Text(
+                        s.tapTempo,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
@@ -273,13 +303,13 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 11),
                     decoration: BoxDecoration(
                       color: _engine.signature == signature
-                          ? AppColors.cardFillActive
-                          : AppColors.cardFill,
+                          ? context.colors.cardFillActive
+                          : context.colors.cardFill,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: _engine.signature == signature
-                            ? AppColors.cardBorderActive
-                            : AppColors.cardBorder,
+                            ? context.colors.cardBorderActive
+                            : context.colors.cardBorder,
                       ),
                     ),
                     alignment: Alignment.center,
@@ -289,8 +319,8 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: _engine.signature == signature
-                            ? AppColors.orangeLight
-                            : AppColors.cream.withValues(alpha: 0.7),
+                            ? context.colors.orangeLight
+                            : context.colors.cream.withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -307,9 +337,13 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Drum backing track',
-                  style:
-                      TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+              Text(
+                s.drumBackingTrack,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
@@ -324,26 +358,28 @@ class _MetronomeScreenState extends ConsumerState<MetronomeScreen> {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 150),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 15, vertical: 8),
+                          horizontal: 15,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: _engine.style == style
-                              ? AppColors.cardFillActive
-                              : AppColors.cardFill,
+                              ? context.colors.cardFillActive
+                              : context.colors.cardFill,
                           borderRadius: BorderRadius.circular(15),
                           border: Border.all(
                             color: _engine.style == style
-                                ? AppColors.cardBorderActive
-                                : AppColors.cardBorder,
+                                ? context.colors.cardBorderActive
+                                : context.colors.cardBorder,
                           ),
                         ),
                         child: Text(
-                          style.label,
+                          style == DrumStyle.click ? s.clickOnly : style.label,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: _engine.style == style
-                                ? AppColors.orangeLight
-                                : AppColors.cream.withValues(alpha: 0.7),
+                                ? context.colors.orangeLight
+                                : context.colors.cream.withValues(alpha: 0.7),
                           ),
                         ),
                       ),
@@ -389,12 +425,14 @@ class _Pendulum extends StatelessWidget {
                 width: 10,
                 height: 10,
                 decoration: BoxDecoration(
-                  color: playing ? AppColors.orange : AppColors.creamFaint,
+                  color: playing
+                      ? context.colors.orange
+                      : context.colors.creamFaint,
                   shape: BoxShape.circle,
                   boxShadow: playing
                       ? [
                           BoxShadow(
-                            color: AppColors.orange.withValues(alpha: 0.6),
+                            color: context.colors.orange.withValues(alpha: 0.6),
                             blurRadius: 10,
                           ),
                         ]
@@ -405,8 +443,11 @@ class _Pendulum extends StatelessWidget {
                 width: 3,
                 height: 26,
                 decoration: BoxDecoration(
-                  color: (playing ? AppColors.orange : AppColors.creamFaint)
-                      .withValues(alpha: 0.55),
+                  color:
+                      (playing
+                              ? context.colors.orange
+                              : context.colors.creamFaint)
+                          .withValues(alpha: 0.55),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -432,13 +473,14 @@ class _RoundStepButton extends StatelessWidget {
         width: 46,
         height: 46,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: context.colors.cream.withValues(alpha: 0.08),
           shape: BoxShape.circle,
         ),
         alignment: Alignment.center,
-        child: Text(label,
-            style:
-                const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+        ),
       ),
     );
   }

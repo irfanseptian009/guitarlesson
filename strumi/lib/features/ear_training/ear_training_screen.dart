@@ -4,8 +4,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
 import '../../core/audio/sound_bank.dart';
+import '../../core/i18n/strings.dart';
 import '../../core/music/chords.dart';
 import '../../core/utils/practice_clock.dart';
 import '../../data/models/progress_state.dart';
@@ -16,26 +17,56 @@ import '../../widgets/screen_scaffold.dart';
 
 enum _Mode { interval, chordQuality }
 
+// Canonical (English) identifiers used for answer comparison; localized
+// for display via [_intervalLabel] / [_qualityLabel].
 const _intervals = [
-  ('Sekon minor', 1),
-  ('Sekon mayor', 2),
-  ('Terts minor', 3),
-  ('Terts mayor', 4),
-  ('Kuart murni', 5),
-  ('Kuint murni', 7),
-  ('Oktaf', 12),
+  ('Minor 2nd', 1),
+  ('Major 2nd', 2),
+  ('Minor 3rd', 3),
+  ('Major 3rd', 4),
+  ('Perfect 4th', 5),
+  ('Perfect 5th', 7),
+  ('Octave', 12),
 ];
 
-/// Extra intervals mixed in when "Mode sulit" is on.
+/// Extra intervals mixed in when hard mode is on.
 const _hardIntervals = [
-  ('Triton', 6),
-  ('Sekst minor', 8),
-  ('Sekst mayor', 9),
-  ('Septim minor', 10),
-  ('Septim mayor', 11),
+  ('Tritone', 6),
+  ('Minor 6th', 8),
+  ('Major 6th', 9),
+  ('Minor 7th', 10),
+  ('Major 7th', 11),
 ];
 
-const _qualityOptions = ['Mayor', 'Minor', 'Dominant 7', 'Maj7'];
+const _qualityOptions = ['Major', 'Minor', 'Dominant 7', 'Maj7'];
+
+const _intervalLabelsId = {
+  'Minor 2nd': 'Sekon minor',
+  'Major 2nd': 'Sekon mayor',
+  'Minor 3rd': 'Terts minor',
+  'Major 3rd': 'Terts mayor',
+  'Perfect 4th': 'Kuart murni',
+  'Perfect 5th': 'Kuint murni',
+  'Octave': 'Oktaf',
+  'Tritone': 'Triton',
+  'Minor 6th': 'Sekst minor',
+  'Major 6th': 'Sekst mayor',
+  'Minor 7th': 'Septim minor',
+  'Major 7th': 'Septim mayor',
+};
+
+const _qualityLabelsId = {
+  'Major': 'Mayor',
+  'Minor': 'Minor',
+  'Dominant 7': 'Dominant 7',
+  'Maj7': 'Maj7',
+};
+
+String _intervalLabel(String canonical, String lang) =>
+    lang == 'id' ? (_intervalLabelsId[canonical] ?? canonical) : canonical;
+
+String _qualityLabel(String canonical, String lang) =>
+    lang == 'id' ? (_qualityLabelsId[canonical] ?? canonical) : canonical;
 
 /// Ear training: interval and chord-quality quizzes with synthesized
 /// guitar sounds, streak tracking, and XP rewards.
@@ -91,7 +122,7 @@ class _EarTrainingScreenState extends ConsumerState<EarTrainingScreen> {
 
   /// Chords with an unambiguous quality for the quiz.
   static final List<(ChordShape, String)> _qualityPool = [
-    for (final chord in kChordCatalog)
+    for (final chord in kGuitarChords)
       if (_qualityOf(chord) != null) (chord, _qualityOf(chord)!),
   ];
 
@@ -102,7 +133,7 @@ class _EarTrainingScreenState extends ConsumerState<EarTrainingScreen> {
     if (name.endsWith('m7')) return null; // minor 7th — ambiguous for 4 opts
     if (name.endsWith('7')) return 'Dominant 7';
     if (chord.isMinor) return 'Minor';
-    return 'Mayor';
+    return 'Major';
   }
 
   void _nextQuestion() {
@@ -168,20 +199,21 @@ class _EarTrainingScreenState extends ConsumerState<EarTrainingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.s;
     final best = ref.watch(progressProvider).bestEarStreak;
 
     return ScreenScaffold(
       gap: 16,
       children: [
-        const SubScreenHeader(title: 'Ear Training'),
+        SubScreenHeader(title: s.earTitle),
         Text(
-          'Latih telinga: interval & kualitas chord',
-          style: TextStyle(fontSize: 13, color: AppColors.creamDim),
+          s.earSubtitle,
+          style: TextStyle(fontSize: 13, color: context.colors.creamDim),
         ),
         Row(
           children: [
             PillChip(
-              label: 'Interval',
+              label: s.interval,
               selected: _mode == _Mode.interval,
               onTap: () {
                 if (_mode != _Mode.interval) {
@@ -194,7 +226,7 @@ class _EarTrainingScreenState extends ConsumerState<EarTrainingScreen> {
             ),
             const SizedBox(width: 8),
             PillChip(
-              label: 'Kualitas chord',
+              label: s.chordQuality,
               selected: _mode == _Mode.chordQuality,
               onTap: () {
                 if (_mode != _Mode.chordQuality) {
@@ -208,7 +240,7 @@ class _EarTrainingScreenState extends ConsumerState<EarTrainingScreen> {
             const Spacer(),
             if (_mode == _Mode.interval)
               PillChip(
-                label: '🔥 Sulit',
+                label: s.hardMode,
                 selected: _hard,
                 onTap: () {
                   _hard = !_hard;
@@ -225,14 +257,16 @@ class _EarTrainingScreenState extends ConsumerState<EarTrainingScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _Stat(label: 'Benar', value: '$_correct',
-                  color: AppColors.green),
-              _Stat(label: 'Salah', value: '$_wrong', color: AppColors.red),
+              _Stat(label: s.correct, value: '$_correct',
+                  color: context.colors.green),
+              _Stat(label: s.wrongLabel, value: '$_wrong',
+                  color: context.colors.red),
               _Stat(
-                  label: 'Streak',
+                  label: s.streakLabel,
                   value: '$_streak',
-                  color: AppColors.orangeLight),
-              _Stat(label: 'Terbaik', value: '$best', color: AppColors.blue),
+                  color: context.colors.orangeLight),
+              _Stat(label: s.bestLabel, value: '$best',
+                  color: context.colors.blue),
             ],
           ),
         ),
@@ -245,13 +279,13 @@ class _EarTrainingScreenState extends ConsumerState<EarTrainingScreen> {
             children: [
               Text(
                 _mode == _Mode.interval
-                    ? 'Dua nada dimainkan berurutan.\nInterval apa itu?'
-                    : 'Satu chord di-strum.\nApa kualitasnya?',
+                    ? s.intervalQuestion
+                    : s.qualityQuestion,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 14,
                     height: 1.5,
-                    color: AppColors.cream.withValues(alpha: 0.75)),
+                    color: context.colors.cream.withValues(alpha: 0.75)),
               ),
               const SizedBox(height: 18),
               GestureDetector(
@@ -260,25 +294,25 @@ class _EarTrainingScreenState extends ConsumerState<EarTrainingScreen> {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    gradient: AppColors.buttonGradient,
+                    gradient: context.colors.buttonGradient,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.orangeGradientBottom
+                        color: context.colors.orangeGradientBottom
                             .withValues(alpha: 0.4),
                         blurRadius: 26,
                         offset: const Offset(0, 10),
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.volume_up_rounded,
-                      color: AppColors.onOrange, size: 30),
+                  child: Icon(Icons.volume_up_rounded,
+                      color: context.colors.onOrange, size: 30),
                 ),
               ),
               const SizedBox(height: 8),
-              Text('putar lagi',
+              Text(s.playAgain,
                   style:
-                      TextStyle(fontSize: 11, color: AppColors.creamFaint)),
+                      TextStyle(fontSize: 11, color: context.colors.creamFaint)),
             ],
           ),
         ),
@@ -294,7 +328,9 @@ class _EarTrainingScreenState extends ConsumerState<EarTrainingScreen> {
           children: [
             for (final option in _options)
               _OptionButton(
-                label: option,
+                label: _mode == _Mode.interval
+                    ? _intervalLabel(option, s.lang)
+                    : _qualityLabel(option, s.lang),
                 state: _picked == null
                     ? _OptionState.idle
                     : option == _answer
@@ -327,7 +363,7 @@ class _Stat extends StatelessWidget {
                 fontSize: 22, fontWeight: FontWeight.w800, color: color)),
         const SizedBox(height: 2),
         Text(label,
-            style: TextStyle(fontSize: 11, color: AppColors.creamDim)),
+            style: TextStyle(fontSize: 11, color: context.colors.creamDim)),
       ],
     );
   }
@@ -350,24 +386,24 @@ class _OptionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final (fill, border, text) = switch (state) {
       _OptionState.idle => (
-          AppColors.cardFill,
-          AppColors.cardBorder,
-          AppColors.cream,
+          context.colors.cardFill,
+          context.colors.cardBorder,
+          context.colors.cream,
         ),
       _OptionState.correct => (
-          AppColors.green.withValues(alpha: 0.2),
-          AppColors.green,
-          AppColors.green,
+          context.colors.green.withValues(alpha: 0.2),
+          context.colors.green,
+          context.colors.green,
         ),
       _OptionState.wrong => (
-          AppColors.red.withValues(alpha: 0.2),
-          AppColors.red,
-          AppColors.red,
+          context.colors.red.withValues(alpha: 0.2),
+          context.colors.red,
+          context.colors.red,
         ),
       _OptionState.dimmed => (
-          AppColors.cardFill,
-          AppColors.cardBorder,
-          AppColors.creamFaint,
+          context.colors.cardFill,
+          context.colors.cardBorder,
+          context.colors.creamFaint,
         ),
     };
     return GestureDetector(

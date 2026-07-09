@@ -4,7 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
+import '../../core/i18n/strings.dart';
 import '../../core/audio/chord_listener.dart';
 import '../../core/audio/sound_bank.dart';
 import '../../core/dsp/chroma.dart';
@@ -201,7 +202,7 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
       setState(() => _status = _AiStatus.done);
       Celebration.show(context);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Lesson selesai! +${_lesson.xpReward} XP 🎉')));
+          content: Text(context.s.lessonDone(_lesson.xpReward))));
     }
   }
 
@@ -247,20 +248,15 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
 
   String get _tip {
     if (_status == _AiStatus.idle && _repScores.isEmpty) {
-      return 'Tekan mulai, lalu mainkan chord target — AI memverifikasi '
-          'tiap strum lewat mikrofon.';
+      return context.s.aiPressStart;
     }
     if (_repScores.length < 2) {
-      return 'Strum chord ${_targetChord.toUpperCase()} dengan mantap dan '
-          'biarkan berbunyi sebentar.';
+      return context.s.aiStrumChord(_targetChord.toUpperCase());
     }
     final weakest = [
-      (_cleanliness, 'Tekan senar lebih mantap dan pastikan tiap nada bunyi '
-          'bersih tanpa buzz.'),
-      (_timing, 'Jaga jarak antar strum tetap rata — latih dengan metronome '
-          '70 BPM.'),
-      (_transition, 'Perlambat dulu perpindahan jari, lalu naikkan kecepatan '
-          'bertahap.'),
+      (_cleanliness, context.s.aiTipClean),
+      (_timing, context.s.aiTipTiming),
+      (_transition, context.s.aiTipTransition),
     ]..sort((a, b) => a.$1.compareTo(b.$1));
     return 'Tip: ${weakest.first.$2}';
   }
@@ -280,12 +276,12 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
       children: [
         SubScreenHeader(
           overline: '${_lesson.track.label} · Lesson $number',
-          title: _lesson.title,
+          title: _lesson.titleFor(context.s.lang),
         ),
         _buildDemoPanel(),
         if (_lesson.practiceChords.isNotEmpty) _buildSlowDowner(),
         if (_lesson.tab != null) _buildTab(),
-        if (_lesson.theoryPoints.isNotEmpty) _buildTheory(),
+        if (_lesson.theoryFor(context.s.lang).isNotEmpty) _buildTheory(),
         if (_lesson.hasAiPractice)
           _buildAiPanel()
         else
@@ -298,7 +294,7 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
     final chords = _lesson.practiceChords;
     return GlassCard(
       radius: 22,
-      fill: Colors.white.withValues(alpha: 0.04),
+      fill: context.colors.cream.withValues(alpha: 0.04),
       padding: EdgeInsets.zero,
       child: SizedBox(
         height: 196,
@@ -308,16 +304,16 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.menu_book_rounded,
-                        size: 40, color: AppColors.blue),
+                    Icon(Icons.menu_book_rounded,
+                        size: 40, color: context.colors.blue),
                     const SizedBox(height: 12),
                     Text(
-                      _lesson.summary,
+                      _lesson.summaryFor(context.s.lang),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           fontSize: 13,
                           height: 1.5,
-                          color: AppColors.creamDim),
+                          color: context.colors.creamDim),
                     ),
                   ],
                 ),
@@ -332,7 +328,7 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
                       style: TextStyle(
                         fontFamily: 'monospace',
                         fontSize: 11,
-                        color: AppColors.creamGhost,
+                        color: context.colors.creamGhost,
                       ),
                     ),
                   ),
@@ -363,11 +359,11 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
                                 width: 52,
                                 height: 52,
                                 decoration: BoxDecoration(
-                                  gradient: AppColors.buttonGradient,
+                                  gradient: context.colors.buttonGradient,
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.orangeGradientBottom
+                                      color: context.colors.orangeGradientBottom
                                           .withValues(alpha: 0.4),
                                       blurRadius: 26,
                                       offset: const Offset(0, 10),
@@ -378,7 +374,7 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
                                   _demoPlaying
                                       ? Icons.pause_rounded
                                       : Icons.play_arrow_rounded,
-                                  color: AppColors.onOrange,
+                                  color: context.colors.onOrange,
                                   size: 30,
                                 ),
                               ),
@@ -402,9 +398,9 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
                             value: _demoProgress!.value,
                             minHeight: 4,
                             backgroundColor:
-                                Colors.white.withValues(alpha: 0.12),
-                            valueColor: const AlwaysStoppedAnimation(
-                                AppColors.orange),
+                                context.colors.cream.withValues(alpha: 0.12),
+                            valueColor: AlwaysStoppedAnimation(
+                                context.colors.orange),
                           ),
                         ),
                       ),
@@ -427,7 +423,7 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: AppColors.cream.withValues(alpha: 0.7),
+              color: context.colors.cream.withValues(alpha: 0.7),
             ),
           ),
           Row(
@@ -441,8 +437,8 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
                         horizontal: 13, vertical: 7),
                     decoration: BoxDecoration(
                       color: _speed == speed
-                          ? AppColors.orange
-                          : Colors.white.withValues(alpha: 0.07),
+                          ? context.colors.orange
+                          : context.colors.cream.withValues(alpha: 0.07),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Text(
@@ -451,8 +447,8 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: _speed == speed
-                            ? AppColors.onOrange
-                            : AppColors.cream.withValues(alpha: 0.7),
+                            ? context.colors.onOrange
+                            : context.colors.cream.withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -467,98 +463,169 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
 
   Widget _buildTab() {
     final tab = _lesson.tab!;
+    final st = context.s;
+    final colors = context.colors;
+
+    // Fret window of this exercise, so the player knows where the hand
+    // sits ("Fret 5–8").
+    var minFret = 99;
+    var maxFret = 0;
+    for (final line in tab) {
+      for (final note in line.notes) {
+        for (final m in RegExp(r'\d+').allMatches(note)) {
+          final v = int.parse(m.group(0)!);
+          if (v > 0) {
+            if (v < minFret) minFret = v;
+            if (v > maxFret) maxFret = v;
+          }
+        }
+      }
+    }
+    final hasFrets = maxFret > 0;
+
     return GlassCard(
       radius: 22,
       padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Row(
             children: [
-              Text('Tab interaktif',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+              Text(st.interactiveTab,
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w700)),
+              const SizedBox(width: 8),
+              if (hasFrets)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: colors.yellow,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    st.fretRange(minFret, maxFret),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF232B54),
+                    ),
+                  ),
+                ),
+              const Spacer(),
               Text(
-                'auto-scroll aktif',
+                st.autoScrollOn,
                 style: TextStyle(
                   fontSize: 11,
-                  color: AppColors.blue,
+                  color: colors.blue,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           LayoutBuilder(
             builder: (context, constraints) => Stack(
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Column(
-                    children: [
-                      for (var i = 0; i < tab.length; i++) ...[
-                        if (i > 0) const SizedBox(height: 11),
-                        SizedBox(
-                          height: 14,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: AppColors.cream
-                                      .withValues(alpha: 0.25),
+                Column(
+                  children: [
+                    for (var i = 0; i < tab.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 6),
+                      SizedBox(
+                        height: 26,
+                        child: Row(
+                          children: [
+                            // String label chip; lower strings get a
+                            // thicker "string" line so orientation is
+                            // obvious at a glance.
+                            SizedBox(
+                              width: 26,
+                              child: Text(
+                                tab[i].string,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  fontFamily: 'monospace',
+                                  color: i == 0
+                                      ? colors.orangeLight
+                                      : colors.creamDim,
                                 ),
                               ),
                             ),
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 24,
-                                  child: Text(
-                                    tab[i].string,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontFamily: 'monospace',
-                                      color: AppColors.creamFaint,
-                                    ),
+                            Expanded(
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // The string itself.
+                                  Container(
+                                    height: 1.0 + i * 0.35,
+                                    color: colors.cream
+                                        .withValues(alpha: 0.22),
                                   ),
-                                ),
-                                for (final note in tab[i].notes)
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.only(right: 26),
-                                    child: Text(
-                                      note,
-                                      style: const TextStyle(
-                                        fontFamily: 'monospace',
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
+                                  Row(
+                                    children: [
+                                      for (final note in tab[i].notes)
+                                        Expanded(
+                                          child: Center(
+                                            child: note == '—'
+                                                ? null
+                                                : Container(
+                                                    padding:
+                                                        const EdgeInsets
+                                                            .symmetric(
+                                                        horizontal: 6,
+                                                        vertical: 2),
+                                                    decoration:
+                                                        BoxDecoration(
+                                                      color: colors.navy,
+                                                      borderRadius:
+                                                          BorderRadius
+                                                              .circular(8),
+                                                    ),
+                                                    child: Text(
+                                                      note,
+                                                      style: TextStyle(
+                                                        fontFamily:
+                                                            'monospace',
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight
+                                                                .w800,
+                                                        color:
+                                                            colors.onNavy,
+                                                      ),
+                                                    ),
+                                                  ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
                     ],
-                  ),
+                  ],
                 ),
                 if (_playhead != null)
                   AnimatedBuilder(
                     animation: _playhead!,
                     builder: (context, _) => Positioned(
-                      left: _playhead!.value * (constraints.maxWidth - 2),
+                      left: 26 +
+                          _playhead!.value * (constraints.maxWidth - 28),
                       top: 0,
                       bottom: 0,
                       child: Container(
                         width: 2,
                         decoration: BoxDecoration(
-                          color: AppColors.orange,
+                          color: colors.orange,
                           borderRadius: BorderRadius.circular(1),
                           boxShadow: [
                             BoxShadow(
                               color:
-                                  AppColors.orange.withValues(alpha: 0.7),
+                                  colors.orange.withValues(alpha: 0.7),
                               blurRadius: 10,
                             ),
                           ],
@@ -569,10 +636,61 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          // Legend so nobody wonders which fret or string is which.
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: colors.cream.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final hint in [
+                  st.tabLegendStrings,
+                  st.tabLegendNumbers,
+                  st.tabLegendSymbols,
+                ])
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 1.5),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 5),
+                          child: Container(
+                            width: 5,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: colors.pinkStrong,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 7),
+                        Expanded(
+                          child: Text(
+                            hint,
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              height: 1.4,
+                              color: colors.creamDim,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
+
 
   Widget _buildTheory() {
     return GlassCard(
@@ -580,8 +698,9 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (var i = 0; i < _lesson.theoryPoints.length; i++) ...[
-            if (i > 0) const SizedBox(height: 10),
+          for (final point in _lesson.theoryFor(context.s.lang)) ...[
+            if (point != _lesson.theoryFor(context.s.lang).first)
+              const SizedBox(height: 10),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -590,18 +709,18 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
                   child: Container(
                     width: 8,
                     height: 8,
-                    decoration: const BoxDecoration(
-                        color: AppColors.orange, shape: BoxShape.circle),
+                    decoration: BoxDecoration(
+                        color: context.colors.orange, shape: BoxShape.circle),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    _lesson.theoryPoints[i],
+                    point,
                     style: TextStyle(
                       fontSize: 13,
                       height: 1.55,
-                      color: AppColors.cream.withValues(alpha: 0.75),
+                      color: context.colors.cream.withValues(alpha: 0.75),
                     ),
                   ),
                 ),
@@ -615,9 +734,9 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
 
   Widget _buildAiPanel() {
     final statusText = switch (_status) {
-      _AiStatus.idle => 'siap',
-      _AiStatus.listening => 'mendengarkan',
-      _AiStatus.done => 'selesai',
+      _AiStatus.idle => context.s.aiIdle,
+      _AiStatus.listening => context.s.aiListening,
+      _AiStatus.done => context.s.aiDone,
     };
     return GlassCard(
       radius: 22,
@@ -626,11 +745,11 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          AppColors.orange.withValues(alpha: 0.12),
-          Colors.white.withValues(alpha: 0.04),
+          context.colors.orange.withValues(alpha: 0.12),
+          context.colors.cream.withValues(alpha: 0.04),
         ],
       ),
-      border: AppColors.orange.withValues(alpha: 0.3),
+      border: context.colors.orange.withValues(alpha: 0.3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -651,10 +770,10 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
                 children: [
                   Text(
                     '${_overallScore.round()}%',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.orangeLight,
+                      color: context.colors.orangeLight,
                     ),
                   ),
                   Builder(builder: (context) {
@@ -666,7 +785,7 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
                     return Text(
                       'terbaik ${best.round()}%',
                       style: TextStyle(
-                          fontSize: 10, color: AppColors.creamFaint),
+                          fontSize: 10, color: context.colors.creamFaint),
                     );
                   }),
                 ],
@@ -678,7 +797,7 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
             children: [
               Text('Mainkan:',
                   style:
-                      TextStyle(fontSize: 12, color: AppColors.creamDim)),
+                      TextStyle(fontSize: 12, color: context.colors.creamDim)),
               const SizedBox(width: 12),
               ChordDiagram(
                 chord: chordByName(_targetChord),
@@ -694,18 +813,18 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'Rep ${_repScores.length}/$_totalReps',
-                    style: const TextStyle(
+                    context.s.rep(_repScores.length, _totalReps),
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.blue,
+                      color: context.colors.blue,
                     ),
                   ),
                   if (_wrongChord != null)
                     Text(
-                      'Terdeteksi: $_wrongChord',
+                      context.s.detected(_wrongChord ?? ''),
                       style: TextStyle(
-                          fontSize: 11, color: AppColors.creamFaint),
+                          fontSize: 11, color: context.colors.creamFaint),
                     ),
                 ],
               ),
@@ -715,19 +834,19 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
           _MetricBar(
               label: 'Kebersihan',
               value: _cleanliness,
-              color: AppColors.orange),
+              color: context.colors.orange),
           const SizedBox(height: 9),
-          _MetricBar(label: 'Timing', value: _timing, color: AppColors.blue),
+          _MetricBar(label: 'Timing', value: _timing, color: context.colors.blue),
           const SizedBox(height: 9),
           _MetricBar(
-              label: 'Transisi', value: _transition, color: AppColors.yellow),
+              label: 'Transisi', value: _transition, color: context.colors.yellowDeep),
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.only(top: 12),
             decoration: BoxDecoration(
               border: Border(
-                top: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+                top: BorderSide(color: context.colors.cream.withValues(alpha: 0.08)),
               ),
             ),
             child: Text(
@@ -735,7 +854,7 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
               style: TextStyle(
                 fontSize: 12,
                 height: 1.55,
-                color: AppColors.cream.withValues(alpha: 0.65),
+                color: context.colors.cream.withValues(alpha: 0.65),
               ),
             ),
           ),
@@ -743,7 +862,7 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
           PrimaryButton(
             label: _status == _AiStatus.listening
                 ? 'BERHENTI'
-                : 'MULAI LATIHAN AI',
+                : context.s.startAiPractice,
             height: 46,
             fontSize: 13,
             onTap: _togglePracticeSafe,
@@ -758,14 +877,14 @@ class _LessonPlayerScreenState extends ConsumerState<LessonPlayerScreen>
   Widget _buildCompleteButton() {
     final done = ref.watch(progressProvider).isLessonCompleted(_lesson.id);
     return PrimaryButton(
-      label: done ? 'SUDAH SELESAI ✓' : 'TANDAI SELESAI',
+      label: done ? context.s.alreadyDone : context.s.markDone,
       onTap: () {
         if (done) return;
         _progress.setLessonProgress(_lesson.id, 1.0,
             xpOnComplete: _lesson.xpReward);
         Celebration.show(context);
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('+${_lesson.xpReward} XP 🎉')));
+            SnackBar(content: Text(context.s.xpGained(_lesson.xpReward))));
       },
     );
   }
@@ -791,7 +910,7 @@ class _MetricBar extends StatelessWidget {
           child: Text(label,
               style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.cream.withValues(alpha: 0.6))),
+                  color: context.colors.cream.withValues(alpha: 0.6))),
         ),
         Expanded(
           child: ClipRRect(
@@ -799,7 +918,7 @@ class _MetricBar extends StatelessWidget {
             child: LinearProgressIndicator(
               value: (value / 100).clamp(0.0, 1.0),
               minHeight: 6,
-              backgroundColor: Colors.white.withValues(alpha: 0.1),
+              backgroundColor: context.colors.cream.withValues(alpha: 0.1),
               valueColor: AlwaysStoppedAnimation(color),
             ),
           ),
@@ -852,11 +971,11 @@ class _PulsingDotState extends State<_PulsingDot>
         width: 8,
         height: 8,
         decoration: BoxDecoration(
-          color: AppColors.orange,
+          color: context.colors.orange,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AppColors.orange.withValues(alpha: 0.8),
+              color: context.colors.orange.withValues(alpha: 0.8),
               blurRadius: 8,
             ),
           ],

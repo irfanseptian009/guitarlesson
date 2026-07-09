@@ -1,12 +1,19 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../app/theme/app_palette.dart';
+import '../../core/i18n/strings.dart';
 import '../../core/music/tunings.dart';
 import '../../data/catalogs/achievements_catalog.dart';
 import '../../data/models/app_settings.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/glass_card.dart';
+import '../../widgets/guitar_picker.dart';
+import '../../widgets/pressable_scale.dart';
 import '../../widgets/screen_scaffold.dart';
 
 /// Profile tab: level/XP, live achievements, and all app settings.
@@ -25,6 +32,7 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = context.s;
     final settings = ref.watch(settingsProvider);
     final progress = ref.watch(progressProvider);
     final xpFraction =
@@ -36,24 +44,28 @@ class ProfileScreen extends ConsumerWidget {
         // ------------------------------------------------ header
         Column(
           children: [
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                gradient: context.colors.avatarGradient,
-                shape: BoxShape.circle,
-                border: Border.all(
-                    color: context.colors.orange.withValues(alpha: 0.3),
-                    width: 3),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                settings.initials,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: context.colors.onOrange,
-                ),
+            PressableScale(
+              onTap: () => _editAvatar(context, ref, settings),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  _AvatarCircle(settings: settings, size: 92),
+                  Positioned(
+                    bottom: 0,
+                    right: -2,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: context.colors.navy,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: context.colors.surfaceDeep, width: 2),
+                      ),
+                      child: Icon(Icons.photo_camera_rounded,
+                          size: 13, color: context.colors.onNavy),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 10),
@@ -66,7 +78,7 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 _Pill(
                   label:
-                      'Level ${progress.level} · ${progress.levelTitle}',
+                      '${s.level} ${progress.level} · ${progress.levelTitle}',
                   color: context.colors.blue,
                 ),
                 const SizedBox(width: 8),
@@ -80,7 +92,7 @@ class ProfileScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Menuju Level ${progress.level + 1}',
+                Text(s.toLevel(progress.level + 1),
                     style: TextStyle(
                         fontSize: 11,
                         color: context.colors.cream.withValues(alpha: 0.5))),
@@ -100,7 +112,7 @@ class ProfileScreen extends ConsumerWidget {
                 height: 8,
                 child: Stack(
                   children: [
-                    Container(color: Colors.white.withValues(alpha: 0.1)),
+                    Container(color: context.colors.cream.withValues(alpha: 0.1)),
                     FractionallySizedBox(
                       widthFactor: xpFraction,
                       child: Container(
@@ -119,8 +131,9 @@ class ProfileScreen extends ConsumerWidget {
         ),
 
         // ------------------------------------------------ achievements
-        const Text('Achievements',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+        Text(s.achievements,
+            style:
+                const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
         GridView.count(
           crossAxisCount: 3,
           shrinkWrap: true,
@@ -136,7 +149,8 @@ class ProfileScreen extends ConsumerWidget {
                 onTap: () => ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
                   ..showSnackBar(SnackBar(
-                      content: Text(achievement.description))),
+                      content:
+                          Text(achievement.descriptionFor(s.lang)))),
               ),
           ],
         ),
@@ -148,8 +162,8 @@ class ProfileScreen extends ConsumerWidget {
           child: Column(
             children: [
               _SettingRow(
-                name: 'Mode gelap',
-                value: settings.isDarkMode ? 'Aktif' : 'Nonaktif',
+                name: s.darkMode,
+                value: settings.isDarkMode ? s.active : s.inactive,
                 extra: Switch(
                   value: settings.isDarkMode,
                   activeThumbColor: context.colors.orange,
@@ -162,26 +176,36 @@ class ProfileScreen extends ConsumerWidget {
                     .update((s) => s.copyWith(isDarkMode: !s.isDarkMode)),
               ),
               _SettingRow(
-                name: 'Nama',
+                name: s.language,
+                value: settings.languageCode == 'id'
+                    ? 'Bahasa Indonesia'
+                    : 'English',
+                onTap: () => ref.read(settingsProvider.notifier).update(
+                    (st) => st.copyWith(
+                        languageCode:
+                            st.languageCode == 'id' ? 'en' : 'id')),
+              ),
+              _SettingRow(
+                name: s.name,
                 value: settings.userName,
                 onTap: () => _editName(context, ref, settings),
               ),
               _SettingRow(
-                name: 'Gitar saya',
-                value: settings.guitarType,
-                onTap: () => _pickGuitar(context, ref, settings),
+                name: s.myGuitar,
+                value: settings.guitarKind.label(s.lang),
+                onTap: () => showGuitarPicker(context, ref),
               ),
               _SettingRow(
-                name: 'Goal harian',
-                value: '${settings.dailyGoalMinutes} menit',
+                name: s.dailyGoal,
+                value: '${settings.dailyGoalMinutes} ${s.minutes}',
                 onTap: () => _editGoal(context, ref, settings),
               ),
               _SettingRow(
-                name: 'Notifikasi latihan',
+                name: s.practiceReminder,
                 value: settings.reminderEnabled
                     ? '${settings.reminderHour.toString().padLeft(2, '0')}:'
                         '${settings.reminderMinute.toString().padLeft(2, '0')}'
-                    : 'Nonaktif',
+                    : s.inactive,
                 extra: Switch(
                   value: settings.reminderEnabled,
                   activeThumbColor: context.colors.orange,
@@ -192,12 +216,12 @@ class ProfileScreen extends ConsumerWidget {
                 onTap: () => _pickReminderTime(context, ref, settings),
               ),
               _SettingRow(
-                name: 'Kalibrasi tuner',
+                name: s.tunerCalibration,
                 value: 'A = ${settings.a4Calibration.round()} Hz',
                 onTap: () => _editCalibration(context, ref, settings),
               ),
               _SettingRow(
-                name: 'Tuning',
+                name: s.tuning,
                 value: kTunings[settings.tuningIndex].name,
                 onTap: () => ref.read(settingsProvider.notifier).update(
                     (s) => s.copyWith(
@@ -205,12 +229,12 @@ class ProfileScreen extends ConsumerWidget {
                             (s.tuningIndex + 1) % kTunings.length)),
               ),
               _SettingRow(
-                name: 'Tentang Strumi',
-                value: 'v1.1.0',
+                name: s.aboutStrumi,
+                value: 'v1.2.0',
                 onTap: () => _showAbout(context),
               ),
               _SettingRow(
-                name: 'Reset progress',
+                name: s.resetProgress,
                 value: '',
                 destructive: true,
                 showDivider: false,
@@ -221,8 +245,9 @@ class ProfileScreen extends ConsumerWidget {
         ),
 
         Center(
-          child: Text('Strumi 1.1.0 · dibuat dengan Flutter',
-              style: TextStyle(fontSize: 11, color: context.colors.creamGhost)),
+          child: Text(s.madeWith,
+              style: TextStyle(
+                  fontSize: 11, color: context.colors.creamGhost)),
         ),
       ],
     );
@@ -238,10 +263,7 @@ class ProfileScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Teman belajar gitarmu — tuner presisi, metronome + drum '
-              'tracks, chord detector AI, dan learning path adaptif.\n\n'
-              'Semua audio disintesis langsung di perangkat; analisis '
-              'suara (YIN & chromagram) berjalan offline.',
+              context.s.aboutBody,
               style: TextStyle(
                   fontSize: 13, height: 1.6, color: context.colors.creamDim),
             ),
@@ -250,7 +272,7 @@ class ProfileScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Tutup',
+            child: Text(context.s.close,
                 style: TextStyle(color: context.colors.orangeLight)),
           ),
         ],
@@ -262,22 +284,22 @@ class ProfileScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title:
-            const Text('Reset semua progress?', style: TextStyle(fontSize: 17)),
+        title: Text(context.s.resetTitle,
+            style: const TextStyle(fontSize: 17)),
         content: Text(
-          'XP, streak, lesson, chord dikuasai, dan statistik akan dihapus '
-          'permanen. Pengaturan tetap tersimpan.',
+          context.s.resetBody,
           style: TextStyle(
               fontSize: 13, height: 1.5, color: context.colors.creamDim),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+            child: Text(context.s.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Reset', style: TextStyle(color: context.colors.red)),
+            child: Text(context.s.reset,
+                style: TextStyle(color: context.colors.red)),
           ),
         ],
       ),
@@ -293,7 +315,7 @@ class ProfileScreen extends ConsumerWidget {
     final name = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Nama', style: TextStyle(fontSize: 17)),
+        title: Text(context.s.name, style: const TextStyle(fontSize: 17)),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -302,11 +324,11 @@ class ProfileScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
+            child: Text(context.s.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: Text('Simpan',
+            child: Text(context.s.save,
                 style: TextStyle(color: context.colors.orangeLight)),
           ),
         ],
@@ -320,44 +342,6 @@ class ProfileScreen extends ConsumerWidget {
     controller.dispose();
   }
 
-  Future<void> _pickGuitar(
-      BuildContext context, WidgetRef ref, AppSettings settings) async {
-    const options = [
-      'Akustik steel',
-      'Akustik nylon',
-      'Elektrik',
-      'Klasik',
-    ];
-    final choice = await showDialog<String>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('Gitar saya', style: TextStyle(fontSize: 17)),
-        children: [
-          for (final option in options)
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, option),
-              child: Text(
-                option,
-                style: TextStyle(
-                  color: option == settings.guitarType
-                      ? context.colors.orangeLight
-                      : context.colors.cream,
-                  fontWeight: option == settings.guitarType
-                      ? FontWeight.w700
-                      : FontWeight.w400,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-    if (choice != null) {
-      ref
-          .read(settingsProvider.notifier)
-          .update((s) => s.copyWith(guitarType: choice));
-    }
-  }
-
   Future<void> _editGoal(
       BuildContext context, WidgetRef ref, AppSettings settings) async {
     var minutes = settings.dailyGoalMinutes;
@@ -365,11 +349,12 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Goal harian', style: TextStyle(fontSize: 17)),
+          title: Text(context.s.dailyGoal,
+              style: const TextStyle(fontSize: 17)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('$minutes menit / hari',
+              Text('$minutes ${context.s.minutes}',
                   style: const TextStyle(
                       fontSize: 20, fontWeight: FontWeight.w800)),
               Slider(
@@ -384,11 +369,11 @@ class ProfileScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Batal'),
+              child: Text(context.s.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, minutes),
-              child: Text('Simpan',
+              child: Text(context.s.save,
                   style: TextStyle(color: context.colors.orangeLight)),
             ),
           ],
@@ -399,6 +384,150 @@ class ProfileScreen extends ConsumerWidget {
       ref
           .read(settingsProvider.notifier)
           .update((s) => s.copyWith(dailyGoalMinutes: result));
+    }
+  }
+
+
+  static const _presetEmojis = [
+    '🎸', '🎶', '🤘', '🎵', '🎤', '🎧', '🥁', '🎹',
+    '🌟', '🔥', '😎', '🦖', '🐱', '🌈', '⚡', '🍀',
+  ];
+
+  Future<void> _editAvatar(
+      BuildContext context, WidgetRef ref, AppSettings settings) async {
+    final colors = context.colors;
+    final s = context.s;
+    await showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: colors.surfaceDeep,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      builder: (sheetContext) {
+        final bottomInset = MediaQuery.paddingOf(sheetContext).bottom;
+        return Padding(
+          padding: EdgeInsets.fromLTRB(20, 16, 20, bottomInset + 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(s.profilePhoto,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: PressableScale(
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        await _pickPhoto(ref);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: colors.navy,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.photo_library_rounded,
+                                size: 17, color: colors.onNavy),
+                            const SizedBox(width: 8),
+                            Text(s.pickFromGallery,
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: colors.onNavy)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (settings.avatarPath.isNotEmpty ||
+                      settings.avatarEmoji.isNotEmpty) ...[
+                    const SizedBox(width: 10),
+                    PressableScale(
+                      onTap: () {
+                        ref.read(settingsProvider.notifier).update((st) =>
+                            st.copyWith(avatarPath: '', avatarEmoji: ''));
+                        Navigator.pop(sheetContext);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: colors.red.withValues(alpha: 0.13),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(Icons.delete_outline_rounded,
+                            size: 18, color: colors.red),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(s.pickAvatar,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: colors.creamDim)),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (final emoji in _presetEmojis)
+                    PressableScale(
+                      onTap: () {
+                        ref.read(settingsProvider.notifier).update((st) =>
+                            st.copyWith(avatarEmoji: emoji, avatarPath: ''));
+                        Navigator.pop(sheetContext);
+                      },
+                      child: Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: settings.avatarEmoji == emoji
+                              ? colors.pink
+                              : colors.cardFill,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: colors.cardBorder),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(emoji,
+                            style: const TextStyle(fontSize: 22)),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickPhoto(WidgetRef ref) async {
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 640,
+        maxHeight: 640,
+        imageQuality: 88,
+      );
+      if (picked == null) return;
+      // Copy out of the picker cache so the avatar survives cache cleanup.
+      final dir = await getApplicationDocumentsDirectory();
+      final target = File(
+          '${dir.path}/avatar_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await File(picked.path).copy(target.path);
+      ref.read(settingsProvider.notifier).update(
+          (st) => st.copyWith(avatarPath: target.path, avatarEmoji: ''));
+    } catch (_) {
+      // Picker unavailable (e.g. no gallery on this device) — ignore.
     }
   }
 
@@ -424,8 +553,8 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title:
-              const Text('Kalibrasi tuner', style: TextStyle(fontSize: 17)),
+          title: Text(context.s.tunerCalibration,
+              style: const TextStyle(fontSize: 17)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -444,11 +573,11 @@ class ProfileScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Batal'),
+              child: Text(context.s.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, a4),
-              child: Text('Simpan',
+              child: Text(context.s.save,
                   style: TextStyle(color: context.colors.orangeLight)),
             ),
           ],
@@ -513,7 +642,7 @@ class _AchievementTile extends StatelessWidget {
             border: Border.all(
               color: unlocked
                   ? context.colors.orange.withValues(alpha: 0.25)
-                  : Colors.white.withValues(alpha: 0.07),
+                  : context.colors.cream.withValues(alpha: 0.07),
             ),
           ),
           child: Column(
@@ -525,27 +654,21 @@ class _AchievementTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: unlocked
                       ? achievement.color.withValues(alpha: 0.2)
-                      : Colors.white.withValues(alpha: 0.07),
+                      : context.colors.cream.withValues(alpha: 0.07),
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
-                child: Transform.rotate(
-                  angle: 0.785,
-                  child: Container(
-                    width: 14,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: unlocked
-                          ? achievement.color
-                          : context.colors.creamFaint,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
+                child: Icon(
+                  achievement.icon,
+                  size: 21,
+                  color: unlocked
+                      ? achievement.color
+                      : context.colors.creamFaint,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                achievement.name,
+                achievement.nameFor(context.s.lang),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontSize: 11, fontWeight: FontWeight.w700),
@@ -585,7 +708,7 @@ class _SettingRow extends StatelessWidget {
           border: showDivider
               ? Border(
                   bottom: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.06)),
+                      color: context.colors.cream.withValues(alpha: 0.06)),
                 )
               : null,
         ),
@@ -614,6 +737,51 @@ class _SettingRow extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Profile avatar: gallery photo > emoji > gradient initials.
+class _AvatarCircle extends StatelessWidget {
+  const _AvatarCircle({required this.settings, required this.size});
+
+  final AppSettings settings;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final photo =
+        settings.avatarPath.isNotEmpty ? File(settings.avatarPath) : null;
+    final hasPhoto = photo != null && photo.existsSync();
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: hasPhoto ? null : colors.avatarGradient,
+        color: hasPhoto ? colors.navy : null,
+        shape: BoxShape.circle,
+        border: Border.all(
+            color: colors.orange.withValues(alpha: 0.3), width: 3),
+        image: hasPhoto
+            ? DecorationImage(image: FileImage(photo), fit: BoxFit.cover)
+            : null,
+      ),
+      alignment: Alignment.center,
+      child: hasPhoto
+          ? null
+          : settings.avatarEmoji.isNotEmpty
+              ? Text(settings.avatarEmoji,
+                  style: TextStyle(fontSize: size * 0.42))
+              : Text(
+                  settings.initials,
+                  style: TextStyle(
+                    fontSize: size * 0.32,
+                    fontWeight: FontWeight.w800,
+                    color: colors.onOrange,
+                  ),
+                ),
     );
   }
 }

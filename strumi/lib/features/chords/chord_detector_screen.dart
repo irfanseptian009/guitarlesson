@@ -4,7 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
+import '../../core/i18n/strings.dart';
 import '../../core/audio/mic_service.dart';
 import '../../core/dsp/chroma.dart';
 import '../../core/music/chords.dart';
@@ -29,8 +30,9 @@ class ChordDetectorScreen extends ConsumerStatefulWidget {
 class _ChordDetectorScreenState extends ConsumerState<ChordDetectorScreen> {
   late final MicService _mic;
   late final PracticeClock _clock;
-  final ChromaAnalyzer _analyzer =
-      ChromaAnalyzer(sampleRate: MicService.sampleRate.toDouble());
+  final ChromaAnalyzer _analyzer = ChromaAnalyzer(
+    sampleRate: MicService.sampleRate.toDouble(),
+  );
 
   Timer? _timer;
   bool _micDenied = false;
@@ -48,7 +50,8 @@ class _ChordDetectorScreenState extends ConsumerState<ChordDetectorScreen> {
     _mic = ref.read(micServiceProvider);
     final progress = ref.read(progressProvider.notifier);
     _clock = PracticeClock(
-        (s) => progress.addPracticeSeconds(PracticeCategory.chords, s));
+      (s) => progress.addPracticeSeconds(PracticeCategory.chords, s),
+    );
     unawaited(_startMic());
   }
 
@@ -57,8 +60,10 @@ class _ChordDetectorScreenState extends ConsumerState<ChordDetectorScreen> {
     if (!mounted) return;
     setState(() => _micDenied = !ok);
     if (ok) {
-      _timer ??=
-          Timer.periodic(const Duration(milliseconds: 250), (_) => _poll());
+      _timer ??= Timer.periodic(
+        const Duration(milliseconds: 250),
+        (_) => _poll(),
+      );
     }
   }
 
@@ -98,13 +103,15 @@ class _ChordDetectorScreenState extends ConsumerState<ChordDetectorScreen> {
   }
 
   void _master(String name) {
-    final alreadyMastered =
-        ref.read(progressProvider).masteredChords.contains(name);
+    final alreadyMastered = ref
+        .read(progressProvider)
+        .masteredChords
+        .contains(name);
     ref.read(progressProvider.notifier).masterChord(name);
     if (!alreadyMastered && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('+15 XP — chord $name diverifikasi! 🎸')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.s.chordVerified(name))));
     }
   }
 
@@ -133,13 +140,14 @@ class _ChordDetectorScreenState extends ConsumerState<ChordDetectorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final st = context.s;
     final progress = ref.watch(progressProvider);
     final detected = _detected;
 
     return ScreenScaffold(
       gap: 16,
       children: [
-        const SubScreenHeader(title: 'Chord Detector'),
+        SubScreenHeader(title: st.chordDetector),
 
         // ------------------------------------------------ live status
         GlassCard(
@@ -152,16 +160,20 @@ class _ChordDetectorScreenState extends ConsumerState<ChordDetectorScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _Dot(color: _micDenied ? AppColors.red : AppColors.blue),
+                    _Dot(
+                      color: _micDenied
+                          ? context.colors.red
+                          : context.colors.blue,
+                    ),
                     const SizedBox(width: 8),
                     Text(
-                      _micDenied
-                          ? 'Mic mati — ketuk untuk izinkan'
-                          : 'AI mendengarkan…',
+                      _micDenied ? st.micOffTapAllow : st.aiListeningEllipsis,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: _micDenied ? AppColors.red : AppColors.blue,
+                        color: _micDenied
+                            ? context.colors.red
+                            : context.colors.blue,
                       ),
                     ),
                   ],
@@ -171,19 +183,22 @@ class _ChordDetectorScreenState extends ConsumerState<ChordDetectorScreen> {
               Text(
                 detected?.chord.name ?? '—',
                 style: const TextStyle(
-                    fontSize: 44, fontWeight: FontWeight.w800, height: 1),
+                  fontSize: 44,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
                 detected == null
-                    ? 'Mainkan satu chord dan tahan'
-                    : 'keyakinan ${(detected.score * 100).round()}%',
+                    ? st.playOneChord
+                    : st.confidence((detected.score * 100).round()),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: detected == null
-                      ? AppColors.creamDim
-                      : AppColors.blue,
+                      ? context.colors.creamDim
+                      : context.colors.blue,
                 ),
               ),
               if (detected != null) ...[
@@ -191,12 +206,13 @@ class _ChordDetectorScreenState extends ConsumerState<ChordDetectorScreen> {
                 ChordDiagram(chord: detected.chord, width: 110, height: 128),
                 const SizedBox(height: 12),
                 Text(
-                  detected.chord.tip,
+                  detected.chord.tipFor(st.lang),
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      fontSize: 12,
-                      height: 1.5,
-                      color: AppColors.creamDim),
+                    fontSize: 12,
+                    height: 1.5,
+                    color: context.colors.creamDim,
+                  ),
                 ),
               ],
             ],
@@ -209,51 +225,58 @@ class _ChordDetectorScreenState extends ConsumerState<ChordDetectorScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Spektrum nada (chromagram)',
-                  style:
-                      TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+              Text(
+                st.chromagram,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 14),
-              SizedBox(
-                height: 74,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    for (var pc = 0; pc < 12; pc++)
-                      Expanded(
-                        child: Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 2.5),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              AnimatedContainer(
-                                duration:
-                                    const Duration(milliseconds: 180),
-                                height: 4 + _chromaHeight(pc) * 52,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(3),
-                                  color: _isChordTone(pc)
-                                      ? AppColors.orange
-                                      : AppColors.blue
-                                          .withValues(alpha: 0.45),
+              RepaintBoundary(
+                child: SizedBox(
+                  height: 74,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      for (var pc = 0; pc < 12; pc++)
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 2.5,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 180),
+                                  height: 4 + _chromaHeight(pc) * 52,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(3),
+                                    color: _isChordTone(pc)
+                                        ? context.colors.orange
+                                        : context.colors.blue.withValues(
+                                            alpha: 0.45,
+                                          ),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                kNoteNames[pc],
-                                style: TextStyle(
-                                  fontSize: 8.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: _isChordTone(pc)
-                                      ? AppColors.orangeLight
-                                      : AppColors.creamFaint,
+                                const SizedBox(height: 6),
+                                Text(
+                                  kNoteNames[pc],
+                                  style: TextStyle(
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: _isChordTone(pc)
+                                        ? context.colors.orangeLight
+                                        : context.colors.creamFaint,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -266,14 +289,22 @@ class _ChordDetectorScreenState extends ConsumerState<ChordDetectorScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Kandidat teratas',
-                  style:
-                      TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+              Text(
+                st.topCandidates,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 12),
               if (_top.isEmpty)
-                Text('Belum ada sinyal — strum chord-mu.',
-                    style:
-                        TextStyle(fontSize: 12, color: AppColors.creamFaint))
+                Text(
+                  st.noSignalYet,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.colors.creamFaint,
+                  ),
+                )
               else
                 for (final match in _top) ...[
                   Padding(
@@ -282,10 +313,13 @@ class _ChordDetectorScreenState extends ConsumerState<ChordDetectorScreen> {
                       children: [
                         SizedBox(
                           width: 64,
-                          child: Text(match.chord.name,
-                              style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700)),
+                          child: Text(
+                            match.chord.name,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                         Expanded(
                           child: ClipRRect(
@@ -293,10 +327,12 @@ class _ChordDetectorScreenState extends ConsumerState<ChordDetectorScreen> {
                             child: LinearProgressIndicator(
                               value: match.score,
                               minHeight: 6,
-                              backgroundColor:
-                                  Colors.white.withValues(alpha: 0.10),
-                              valueColor: const AlwaysStoppedAnimation(
-                                  AppColors.blue),
+                              backgroundColor: context.colors.cream.withValues(
+                                alpha: 0.10,
+                              ),
+                              valueColor: AlwaysStoppedAnimation(
+                                context.colors.blue,
+                              ),
                             ),
                           ),
                         ),
@@ -307,7 +343,9 @@ class _ChordDetectorScreenState extends ConsumerState<ChordDetectorScreen> {
                             '${(match.score * 100).round()}%',
                             textAlign: TextAlign.right,
                             style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w700),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ],
@@ -321,20 +359,22 @@ class _ChordDetectorScreenState extends ConsumerState<ChordDetectorScreen> {
         // ------------------------------------------------ mastered count
         Center(
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                  color: AppColors.green.withValues(alpha: 0.4)),
+                color: context.colors.green.withValues(alpha: 0.4),
+              ),
             ),
             child: Text(
-              'Chord dikuasai: ${progress.masteredChords.length}/'
-              '${kChordCatalog.length}',
-              style: const TextStyle(
+              st.masteredCount(
+                progress.masteredChords.length,
+                kGuitarChords.length,
+              ),
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: AppColors.green,
+                color: context.colors.green,
               ),
             ),
           ),
@@ -378,8 +418,7 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
       child: Container(
         width: 8,
         height: 8,
-        decoration:
-            BoxDecoration(color: widget.color, shape: BoxShape.circle),
+        decoration: BoxDecoration(color: widget.color, shape: BoxShape.circle),
       ),
     );
   }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// Theme-aware design tokens. [AppPalette.dark] is the original GuitarMaster
-/// dark design; [AppPalette.light] is its light counterpart. Access via
-/// `context.colors` (see the [AppPaletteX] extension below) instead of the
-/// legacy static [AppColors] constants where a screen has been migrated.
+/// Theme-aware design tokens for the "Capi" playful-geometric design:
+/// warm cream canvas, deep navy ink & cards, punchy orange / sun-yellow /
+/// bubblegum-pink accents. [AppPalette.light] is the default look;
+/// [AppPalette.dark] is its navy-night counterpart. Access via
+/// `context.colors` (see the [AppPaletteX] extension below).
 @immutable
 class AppPalette extends ThemeExtension<AppPalette> {
   const AppPalette({
@@ -15,9 +16,14 @@ class AppPalette extends ThemeExtension<AppPalette> {
     required this.onOrange,
     required this.blue,
     required this.yellow,
+    required this.yellowDeep,
     required this.green,
     required this.red,
     required this.purple,
+    required this.navy,
+    required this.onNavy,
+    required this.pink,
+    required this.pinkStrong,
     required this.backgroundTop,
     required this.backgroundMid,
     required this.backgroundBottom,
@@ -32,6 +38,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     required this.cardBorder,
     required this.cardFillActive,
     required this.cardBorderActive,
+    required this.cardShadow,
   });
 
   final Brightness brightness;
@@ -43,10 +50,27 @@ class AppPalette extends ThemeExtension<AppPalette> {
   final Color onOrange;
 
   final Color blue;
+
+  /// Sun-yellow fill (Switch pill, rings). Pair with [navy] text.
   final Color yellow;
+
+  /// Darker gold for yellow *text/accents* sitting on the background.
+  final Color yellowDeep;
   final Color green;
   final Color red;
   final Color purple;
+
+  /// Deep indigo-navy: hero cards, active chips, headline ink.
+  final Color navy;
+
+  /// Warm cream text/icons on top of [navy].
+  final Color onNavy;
+
+  /// Soft bubblegum pink (active nav pill, deco shapes).
+  final Color pink;
+
+  /// Punchier pink for small accents & zigzag trims.
+  final Color pinkStrong;
 
   final Color backgroundTop;
   final Color backgroundMid;
@@ -64,6 +88,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
   final Color cardBorder;
   final Color cardFillActive;
   final Color cardBorderActive;
+  final Color cardShadow;
 
   Gradient get buttonGradient => LinearGradient(
         begin: Alignment.topCenter,
@@ -81,63 +106,75 @@ class AppPalette extends ThemeExtension<AppPalette> {
   Gradient get avatarGradient => LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [orange, const Color(0xFFC24E12)],
+        colors: [orange, const Color(0xFFD84315)],
       );
-
-  static final dark = AppPalette(
-    brightness: Brightness.dark,
-    orange: const Color(0xFFF9772E),
-    orangeLight: const Color(0xFFF9A05C),
-    orangeGradientTop: const Color(0xFFFB8A45),
-    orangeGradientBottom: const Color(0xFFF0661A),
-    onOrange: const Color(0xFF14100B),
-    blue: const Color(0xFFA8C7E8),
-    yellow: const Color(0xFFE8D48A),
-    green: const Color(0xFF8CC88C),
-    red: const Color(0xFFE8908A),
-    purple: const Color(0xFFC9A8E8),
-    backgroundTop: const Color(0xFF141B26),
-    backgroundMid: const Color(0xFF0B0F15),
-    backgroundBottom: const Color(0xFF0A0D12),
-    surfaceDeep: const Color(0xFF131A24),
-    navBackground: const Color(0xEB10151C),
-    navBorderFill: const Color(0xFF10151C),
-    cream: const Color(0xFFF2EEE6),
-    creamDim: const Color(0xFFF2EEE6).withValues(alpha: 0.55),
-    creamFaint: const Color(0xFFF2EEE6).withValues(alpha: 0.45),
-    creamGhost: const Color(0xFFF2EEE6).withValues(alpha: 0.35),
-    cardFill: Colors.white.withValues(alpha: 0.05),
-    cardBorder: Colors.white.withValues(alpha: 0.09),
-    cardFillActive: const Color(0xFFF9772E).withValues(alpha: 0.16),
-    cardBorderActive: const Color(0xFFF9772E).withValues(alpha: 0.5),
-  );
 
   static final light = AppPalette(
     brightness: Brightness.light,
-    orange: const Color(0xFFF9772E),
-    orangeLight: const Color(0xFFC85A17),
-    orangeGradientTop: const Color(0xFFFB8A45),
-    orangeGradientBottom: const Color(0xFFF0661A),
-    onOrange: const Color(0xFF14100B),
-    blue: const Color(0xFF3169A0),
-    yellow: const Color(0xFF9C6B00),
-    green: const Color(0xFF3F8F49),
-    red: const Color(0xFFC8483C),
-    purple: const Color(0xFF7C4FBE),
-    backgroundTop: const Color(0xFFFFFFFF),
-    backgroundMid: const Color(0xFFFBF3EC),
-    backgroundBottom: const Color(0xFFF5E9DC),
-    surfaceDeep: const Color(0xFFFFFFFF),
-    navBackground: const Color(0xEBFFFFFF),
-    navBorderFill: const Color(0xFFFFFFFF),
-    cream: const Color(0xFF211A12),
-    creamDim: const Color(0xFF211A12).withValues(alpha: 0.6),
-    creamFaint: const Color(0xFF211A12).withValues(alpha: 0.48),
-    creamGhost: const Color(0xFF211A12).withValues(alpha: 0.35),
-    cardFill: Colors.black.withValues(alpha: 0.035),
-    cardBorder: Colors.black.withValues(alpha: 0.08),
-    cardFillActive: const Color(0xFFF9772E).withValues(alpha: 0.12),
-    cardBorderActive: const Color(0xFFF9772E).withValues(alpha: 0.45),
+    orange: const Color(0xFFF0521F),
+    orangeLight: const Color(0xFFD8451A),
+    orangeGradientTop: const Color(0xFFF96A32),
+    orangeGradientBottom: const Color(0xFFE94614),
+    onOrange: const Color(0xFFFFF8EF),
+    blue: const Color(0xFF3554D1),
+    yellow: const Color(0xFFFFC72C),
+    yellowDeep: const Color(0xFFB8860B),
+    green: const Color(0xFF1FA05A),
+    red: const Color(0xFFDE3F2B),
+    purple: const Color(0xFF7A4FD8),
+    navy: const Color(0xFF232B54),
+    onNavy: const Color(0xFFFAF5EA),
+    pink: const Color(0xFFF9C6DD),
+    pinkStrong: const Color(0xFFEF6FAC),
+    backgroundTop: const Color(0xFFFDFBF4),
+    backgroundMid: const Color(0xFFF8F3E7),
+    backgroundBottom: const Color(0xFFF3ECDC),
+    surfaceDeep: const Color(0xFFFFFDF6),
+    navBackground: const Color(0xFAFFFDF6),
+    navBorderFill: const Color(0xFFFFFDF6),
+    cream: const Color(0xFF232B54),
+    creamDim: const Color(0xFF232B54).withValues(alpha: 0.62),
+    creamFaint: const Color(0xFF232B54).withValues(alpha: 0.48),
+    creamGhost: const Color(0xFF232B54).withValues(alpha: 0.34),
+    cardFill: const Color(0xFFFFFDF6),
+    cardBorder: const Color(0xFF232B54).withValues(alpha: 0.10),
+    cardFillActive: const Color(0xFFF0521F).withValues(alpha: 0.10),
+    cardBorderActive: const Color(0xFFF0521F).withValues(alpha: 0.50),
+    cardShadow: const Color(0xFF232B54).withValues(alpha: 0.07),
+  );
+
+  static final dark = AppPalette(
+    brightness: Brightness.dark,
+    orange: const Color(0xFFFF6B35),
+    orangeLight: const Color(0xFFFF8A5C),
+    orangeGradientTop: const Color(0xFFFF7A42),
+    orangeGradientBottom: const Color(0xFFEE5220),
+    onOrange: const Color(0xFFFFF8EF),
+    blue: const Color(0xFF8FA8FF),
+    yellow: const Color(0xFFFFD44D),
+    yellowDeep: const Color(0xFFFFD44D),
+    green: const Color(0xFF6FD59A),
+    red: const Color(0xFFFF8577),
+    purple: const Color(0xFFC0A8F8),
+    navy: const Color(0xFF283163),
+    onNavy: const Color(0xFFFAF5EA),
+    pink: const Color(0xFFF4B8D3),
+    pinkStrong: const Color(0xFFF58BBE),
+    backgroundTop: const Color(0xFF1A2040),
+    backgroundMid: const Color(0xFF131735),
+    backgroundBottom: const Color(0xFF0D1026),
+    surfaceDeep: const Color(0xFF1D2447),
+    navBackground: const Color(0xF51A2144),
+    navBorderFill: const Color(0xFF1A2144),
+    cream: const Color(0xFFF2EEE3),
+    creamDim: const Color(0xFFF2EEE3).withValues(alpha: 0.60),
+    creamFaint: const Color(0xFFF2EEE3).withValues(alpha: 0.46),
+    creamGhost: const Color(0xFFF2EEE3).withValues(alpha: 0.34),
+    cardFill: Colors.white.withValues(alpha: 0.055),
+    cardBorder: Colors.white.withValues(alpha: 0.10),
+    cardFillActive: const Color(0xFFFF6B35).withValues(alpha: 0.16),
+    cardBorderActive: const Color(0xFFFF6B35).withValues(alpha: 0.50),
+    cardShadow: Colors.black.withValues(alpha: 0.22),
   );
 
   @override
@@ -150,9 +187,14 @@ class AppPalette extends ThemeExtension<AppPalette> {
     Color? onOrange,
     Color? blue,
     Color? yellow,
+    Color? yellowDeep,
     Color? green,
     Color? red,
     Color? purple,
+    Color? navy,
+    Color? onNavy,
+    Color? pink,
+    Color? pinkStrong,
     Color? backgroundTop,
     Color? backgroundMid,
     Color? backgroundBottom,
@@ -167,6 +209,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     Color? cardBorder,
     Color? cardFillActive,
     Color? cardBorderActive,
+    Color? cardShadow,
   }) {
     return AppPalette(
       brightness: brightness ?? this.brightness,
@@ -177,9 +220,14 @@ class AppPalette extends ThemeExtension<AppPalette> {
       onOrange: onOrange ?? this.onOrange,
       blue: blue ?? this.blue,
       yellow: yellow ?? this.yellow,
+      yellowDeep: yellowDeep ?? this.yellowDeep,
       green: green ?? this.green,
       red: red ?? this.red,
       purple: purple ?? this.purple,
+      navy: navy ?? this.navy,
+      onNavy: onNavy ?? this.onNavy,
+      pink: pink ?? this.pink,
+      pinkStrong: pinkStrong ?? this.pinkStrong,
       backgroundTop: backgroundTop ?? this.backgroundTop,
       backgroundMid: backgroundMid ?? this.backgroundMid,
       backgroundBottom: backgroundBottom ?? this.backgroundBottom,
@@ -194,6 +242,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
       cardBorder: cardBorder ?? this.cardBorder,
       cardFillActive: cardFillActive ?? this.cardFillActive,
       cardBorderActive: cardBorderActive ?? this.cardBorderActive,
+      cardShadow: cardShadow ?? this.cardShadow,
     );
   }
 
@@ -211,9 +260,14 @@ class AppPalette extends ThemeExtension<AppPalette> {
       onOrange: c(onOrange, other.onOrange),
       blue: c(blue, other.blue),
       yellow: c(yellow, other.yellow),
+      yellowDeep: c(yellowDeep, other.yellowDeep),
       green: c(green, other.green),
       red: c(red, other.red),
       purple: c(purple, other.purple),
+      navy: c(navy, other.navy),
+      onNavy: c(onNavy, other.onNavy),
+      pink: c(pink, other.pink),
+      pinkStrong: c(pinkStrong, other.pinkStrong),
       backgroundTop: c(backgroundTop, other.backgroundTop),
       backgroundMid: c(backgroundMid, other.backgroundMid),
       backgroundBottom: c(backgroundBottom, other.backgroundBottom),
@@ -228,6 +282,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
       cardBorder: c(cardBorder, other.cardBorder),
       cardFillActive: c(cardFillActive, other.cardFillActive),
       cardBorderActive: c(cardBorderActive, other.cardBorderActive),
+      cardShadow: c(cardShadow, other.cardShadow),
     );
   }
 }

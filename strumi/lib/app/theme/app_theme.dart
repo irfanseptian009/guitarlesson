@@ -70,8 +70,9 @@ abstract final class AppTheme {
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: iconBrightness,
       statusBarBrightness: brightness,
-      systemNavigationBarColor:
-          brightness == Brightness.dark ? const Color(0xFF0A0D12) : Colors.white,
+      systemNavigationBarColor: brightness == Brightness.dark
+          ? const Color(0xFF0D1026)
+          : const Color(0xFFF3ECDC),
       systemNavigationBarIconBrightness: iconBrightness,
     );
   }

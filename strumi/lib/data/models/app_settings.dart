@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../../core/music/guitars.dart';
+
 /// User-tweakable settings (Profile screen + onboarding).
 @immutable
 class AppSettings {
   const AppSettings({
     this.onboardingDone = false,
     this.userName = 'Gitaris Strumi',
-    this.guitarType = 'Akustik steel',
+    this.guitarKindId = 'acousticSteel',
+    this.languageCode = 'en',
+    this.avatarEmoji = '',
+    this.avatarPath = '',
     this.dailyGoalMinutes = 30,
     this.reminderEnabled = true,
     this.reminderHour = 19,
@@ -21,7 +26,18 @@ class AppSettings {
 
   final bool onboardingDone;
   final String userName;
-  final String guitarType;
+
+  /// [GuitarKind.id] of the player's instrument.
+  final String guitarKindId;
+
+  /// UI language: 'en' (default) or 'id'.
+  final String languageCode;
+
+  /// Emoji avatar; empty = fall back to photo/initials.
+  final String avatarEmoji;
+
+  /// File path of a gallery photo avatar; empty = none.
+  final String avatarPath;
   final int dailyGoalMinutes;
   final bool reminderEnabled;
   final int reminderHour;
@@ -43,6 +59,8 @@ class AppSettings {
 
   int get weeklyGoalMinutes => dailyGoalMinutes * 7;
 
+  GuitarKind get guitarKind => GuitarKind.fromStored(guitarKindId);
+
   TimeOfDay get reminderTime =>
       TimeOfDay(hour: reminderHour, minute: reminderMinute);
 
@@ -57,7 +75,10 @@ class AppSettings {
   AppSettings copyWith({
     bool? onboardingDone,
     String? userName,
-    String? guitarType,
+    String? guitarKindId,
+    String? languageCode,
+    String? avatarEmoji,
+    String? avatarPath,
     int? dailyGoalMinutes,
     bool? reminderEnabled,
     int? reminderHour,
@@ -72,7 +93,10 @@ class AppSettings {
     return AppSettings(
       onboardingDone: onboardingDone ?? this.onboardingDone,
       userName: userName ?? this.userName,
-      guitarType: guitarType ?? this.guitarType,
+      guitarKindId: guitarKindId ?? this.guitarKindId,
+      languageCode: languageCode ?? this.languageCode,
+      avatarEmoji: avatarEmoji ?? this.avatarEmoji,
+      avatarPath: avatarPath ?? this.avatarPath,
       dailyGoalMinutes: dailyGoalMinutes ?? this.dailyGoalMinutes,
       reminderEnabled: reminderEnabled ?? this.reminderEnabled,
       reminderHour: reminderHour ?? this.reminderHour,
@@ -90,7 +114,10 @@ class AppSettings {
   Map<String, dynamic> toJson() => {
         'onboardingDone': onboardingDone,
         'userName': userName,
-        'guitarType': guitarType,
+        'guitarKindId': guitarKindId,
+        'languageCode': languageCode,
+        'avatarEmoji': avatarEmoji,
+        'avatarPath': avatarPath,
         'dailyGoalMinutes': dailyGoalMinutes,
         'reminderEnabled': reminderEnabled,
         'reminderHour': reminderHour,
@@ -106,7 +133,13 @@ class AppSettings {
   factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
         onboardingDone: json['onboardingDone'] as bool? ?? false,
         userName: json['userName'] as String? ?? 'Gitaris Strumi',
-        guitarType: json['guitarType'] as String? ?? 'Akustik steel',
+        // Falls back to the legacy 'guitarType' label for older installs.
+        guitarKindId: GuitarKind.fromStored(json['guitarKindId'] as String? ??
+                json['guitarType'] as String?)
+            .id,
+        languageCode: json['languageCode'] as String? ?? 'en',
+        avatarEmoji: json['avatarEmoji'] as String? ?? '',
+        avatarPath: json['avatarPath'] as String? ?? '',
         dailyGoalMinutes: json['dailyGoalMinutes'] as int? ?? 30,
         reminderEnabled: json['reminderEnabled'] as bool? ?? true,
         reminderHour: json['reminderHour'] as int? ?? 19,

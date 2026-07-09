@@ -57,8 +57,11 @@ void main() {
 
     test('catalog voicings are internally consistent', () {
       for (final chord in kChordCatalog) {
-        expect(chord.frets.length, 6);
-        expect(chord.fingers.length, 6);
+        final strings = chord.instrument == Instrument.guitar ? 6 : 4;
+        expect(chord.frets.length, strings,
+            reason: '${chord.name} (${chord.instrument.name})');
+        expect(chord.fingers.length, chord.frets.length,
+            reason: chord.name);
         expect(chord.midiNotes, isNotEmpty);
         expect(chord.pitchClasses.contains(chord.rootPitchClass), isTrue,
             reason: '${chord.name} must contain its root');

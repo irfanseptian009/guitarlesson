@@ -1,15 +1,17 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
+import '../../core/i18n/strings.dart';
+import '../../core/music/guitars.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/capi_deco.dart';
+import '../../widgets/guitar_picker.dart';
 import '../../widgets/primary_button.dart';
 
-/// First-run screen: hero artwork, brand card, name input, and the
-/// MULAI BELAJAR call to action.
+/// First-run screen in the Capi look: playful geometric backdrop, an
+/// instrument picker, brand card, name input, and the START LEARNING CTA.
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -19,6 +21,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final TextEditingController _nameController = TextEditingController();
+  GuitarKind _guitar = GuitarKind.acousticSteel;
 
   @override
   void dispose() {
@@ -32,6 +35,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           (s) => s.copyWith(
             onboardingDone: true,
             userName: name.isEmpty ? s.userName : name,
+            guitarKindId: _guitar.id,
           ),
         );
     context.go('/home');
@@ -39,6 +43,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final topInset = MediaQuery.paddingOf(context).top;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
@@ -47,23 +52,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Hero artwork (stylized guitar strings — replaces the design's
-          // photo placeholder).
-          const CustomPaint(painter: _GuitarArtPainter()),
-          // Bottom scrim, as in the design.
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.3, 0.78],
-                colors: [
-                  const Color(0xFF0A0D12).withValues(alpha: 0.15),
-                  const Color(0xFF0A0D12).withValues(alpha: 0.92),
-                ],
-              ),
-            ),
-          ),
+          // Playful geometric backdrop.
+          const Positioned.fill(child: CustomPaint(painter: _CapiShapes())),
           Positioned(
             top: topInset + 10,
             right: 26,
@@ -72,12 +62,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(8),
                 child: Text(
-                  'Skip',
+                  context.s.skip,
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.cream.withValues(alpha: 0.75),
+                    fontWeight: FontWeight.w600,
+                    color: colors.creamDim,
                     decoration: TextDecoration.underline,
-                    decorationColor: AppColors.cream.withValues(alpha: 0.75),
+                    decorationColor: colors.creamDim,
                   ),
                 ),
               ),
@@ -87,62 +78,106 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             alignment: Alignment.bottomCenter,
             child: SingleChildScrollView(
               reverse: true,
-              padding: EdgeInsets.fromLTRB(22, 0, 22, bottomInset + 40),
+              padding: EdgeInsets.fromLTRB(22, topInset + 46, 22, bottomInset + 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  Center(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      switchInCurve: Curves.easeOutBack,
+                      child: GuitarIllustration(
+                        key: ValueKey(_guitar),
+                        kind: _guitar,
+                        width: 150,
+                        height: 208,
+                        blobColor: colors.yellow,
+                        bodyColor: colors.pink,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(context.s.chooseGuitar,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: colors.creamDim,
+                          )),
+                      const SizedBox(width: 6),
+                      Sparkle(color: colors.pinkStrong, size: 12),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 128,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: GuitarKind.values.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 10),
+                      itemBuilder: (context, i) {
+                        final kind = GuitarKind.values[i];
+                        return GuitarKindChip(
+                          kind: kind,
+                          selected: kind == _guitar,
+                          width: 90,
+                          onTap: () => setState(() => _guitar = kind),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 18),
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 26, 24, 26),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1C232D).withValues(alpha: 0.55),
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.10)),
-                      borderRadius: BorderRadius.circular(26),
+                      color: colors.cardFill,
+                      border: Border.all(color: colors.cardBorder, width: 1.4),
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colors.cardShadow,
+                          blurRadius: 26,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: AppColors.orange,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
+                            Sparkle(color: colors.orange, size: 14),
                             const SizedBox(width: 8),
-                            const Text(
+                            Text(
                               'STRUMI',
                               style: TextStyle(
                                 fontSize: 12,
                                 letterSpacing: 2,
-                                color: AppColors.orange,
-                                fontWeight: FontWeight.w600,
+                                color: colors.orange,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        const Text(
-                          'Dari chord pertama sampai solo di panggung',
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.w700,
+                        Text(
+                          context.s.onboardTitle,
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
                             height: 1.22,
                           ),
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Learning path adaptif, tuner & metronome presisi, '
-                          'plus AI yang mendengar permainanmu dan memberi '
-                          'feedback real-time.',
+                          context.s.onboardBody,
                           style: TextStyle(
                             fontSize: 14,
                             height: 1.6,
-                            color: AppColors.cream.withValues(alpha: 0.65),
+                            color: colors.creamDim,
                           ),
                         ),
                         const SizedBox(height: 18),
@@ -152,30 +187,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           style: const TextStyle(
                               fontSize: 15, fontWeight: FontWeight.w600),
                           decoration: InputDecoration(
-                            hintText: 'Siapa namamu?',
+                            hintText: context.s.whatsYourName,
                             hintStyle: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w400,
-                              color: AppColors.cream.withValues(alpha: 0.4),
+                              color: colors.creamFaint,
                             ),
                             filled: true,
-                            fillColor: Colors.white.withValues(alpha: 0.06),
+                            fillColor: colors.cream.withValues(alpha: 0.05),
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 18, vertical: 14),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                  color: Colors.white.withValues(alpha: 0.12)),
+                              borderSide:
+                                  BorderSide(color: colors.cardBorder),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                  color: Colors.white.withValues(alpha: 0.12)),
+                              borderSide:
+                                  BorderSide(color: colors.cardBorder),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(
-                                  color: AppColors.orange, width: 1.5),
+                              borderSide: BorderSide(
+                                  color: colors.orange, width: 1.5),
                             ),
                           ),
                         ),
@@ -183,7 +218,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  PrimaryButton(label: 'MULAI BELAJAR', onTap: _finish),
+                  PrimaryButton(
+                      label: context.s.startLearning, onTap: _finish),
                 ],
               ),
             ),
@@ -194,85 +230,57 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 }
 
-/// Abstract acoustic-guitar artwork: glowing strings, sound-hole arc and
-/// bokeh dots on the dark gradient.
-class _GuitarArtPainter extends CustomPainter {
-  const _GuitarArtPainter();
+/// Scattered Capi shapes: navy quarter-circle, pink arch, orange ring,
+/// green triangle — echoing the design's promo backdrop.
+class _CapiShapes extends CustomPainter {
+  const _CapiShapes();
 
   @override
   void paint(Canvas canvas, Size size) {
-    final background = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFF1A222E), Color(0xFF10151D), Color(0xFF0A0D12)],
-      ).createShader(Offset.zero & size);
-    canvas.drawRect(Offset.zero & size, background);
+    final w = size.width;
+    final h = size.height;
+    final paint = Paint();
 
-    // Sound hole: large glowing arc off to the right.
-    final holeCenter = Offset(size.width * 0.82, size.height * 0.34);
-    canvas.drawCircle(
-      holeCenter,
-      size.width * 0.55,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 42
-        ..color = const Color(0xFF04060A).withValues(alpha: 0.65),
+    // Navy quarter disc, top-left.
+    paint.color = const Color(0xFF232B54);
+    canvas.drawCircle(Offset(0, -h * 0.02), w * 0.30, paint);
+
+    // Pink half-ring hugging the navy disc.
+    paint
+      ..color = const Color(0xFFF9C6DD)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.09;
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(0, -h * 0.02), radius: w * 0.40),
+      -0.3,
+      2.2,
+      false,
+      paint,
     );
-    canvas.drawCircle(
-      holeCenter,
-      size.width * 0.55,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3
-        ..color = AppColors.orange.withValues(alpha: 0.35),
-    );
-    canvas.drawCircle(
-      holeCenter,
-      size.width * 0.47,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..color = AppColors.yellow.withValues(alpha: 0.25),
+    paint.style = PaintingStyle.fill;
+
+    // Orange semicircle, top-right.
+    paint.color = const Color(0xFFF0521F);
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(w, h * 0.10), radius: w * 0.14),
+      1.5707,
+      3.1415,
+      true,
+      paint,
     );
 
-    // Six strings sweeping diagonally, brighter towards the treble side.
-    for (var i = 0; i < 6; i++) {
-      final t = i / 5;
-      final paint = Paint()
-        ..strokeWidth = 3.2 - t * 1.9
-        ..strokeCap = StrokeCap.round
-        ..color = Color.lerp(
-          AppColors.cream.withValues(alpha: 0.12),
-          AppColors.orangeLight.withValues(alpha: 0.55),
-          t,
-        )!;
-      final x = size.width * (0.08 + t * 0.13);
-      final path = Path()
-        ..moveTo(x, -20)
-        ..quadraticBezierTo(
-          x + size.width * 0.18,
-          size.height * 0.5,
-          x + size.width * 0.05,
-          size.height + 20,
-        );
-      canvas.drawPath(path, paint);
-    }
+    // Sun-yellow dot, mid-right.
+    paint.color = const Color(0xFFFFC72C);
+    canvas.drawCircle(Offset(w * 0.94, h * 0.30), w * 0.05, paint);
 
-    // Bokeh accents.
-    final random = math.Random(11);
-    for (var i = 0; i < 14; i++) {
-      final dx = random.nextDouble() * size.width;
-      final dy = random.nextDouble() * size.height * 0.6;
-      final radius = 1.5 + random.nextDouble() * 3.5;
-      canvas.drawCircle(
-        Offset(dx, dy),
-        radius,
-        Paint()
-          ..color = (i.isEven ? AppColors.orange : AppColors.blue)
-              .withValues(alpha: 0.10 + random.nextDouble() * 0.12),
-      );
-    }
+    // Green triangle, bottom-left.
+    paint.color = const Color(0xFF1FA05A);
+    final tri = Path()
+      ..moveTo(0, h)
+      ..lineTo(w * 0.22, h)
+      ..lineTo(0, h - w * 0.22)
+      ..close();
+    canvas.drawPath(tri, paint);
   }
 
   @override

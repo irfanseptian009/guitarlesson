@@ -15,6 +15,7 @@ class ProgressRing extends StatelessWidget {
     this.size = 112,
     this.thickness = 15,
     this.trackColor,
+    this.holeColor,
     required this.center,
   });
 
@@ -22,6 +23,10 @@ class ProgressRing extends StatelessWidget {
   final double size;
   final double thickness;
   final Color? trackColor;
+
+  /// Fill of the inner disc — match the card the ring sits on
+  /// (defaults to the theme surface).
+  final Color? holeColor;
   final Widget center;
 
   @override
@@ -41,7 +46,7 @@ class ProgressRing extends StatelessWidget {
             width: size - thickness * 2,
             height: size - thickness * 2,
             decoration: BoxDecoration(
-              color: colors.surfaceDeep,
+              color: holeColor ?? colors.surfaceDeep,
               shape: BoxShape.circle,
             ),
             child: Center(child: center),

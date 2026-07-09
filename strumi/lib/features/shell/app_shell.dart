@@ -1,11 +1,10 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme/app_palette.dart';
+import '../../core/i18n/strings.dart';
 import '../../data/catalogs/achievements_catalog.dart';
 import '../../data/models/progress_state.dart';
 import '../../providers/app_providers.dart';
@@ -112,21 +111,12 @@ class _AppShellState extends ConsumerState<AppShell> {
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
-                    child: Transform.rotate(
-                      angle: 0.785,
-                      child: Container(
-                        width: 22,
-                        height: 22,
-                        decoration: BoxDecoration(
-                          color: achievement.color,
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                      ),
-                    ),
+                    child: Icon(achievement.icon,
+                        size: 30, color: achievement.color),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'ACHIEVEMENT TERBUKA',
+                    context.s.achievementUnlocked,
                     style: TextStyle(
                       fontSize: 11,
                       letterSpacing: 2,
@@ -136,14 +126,14 @@ class _AppShellState extends ConsumerState<AppShell> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    achievement.name,
+                    achievement.nameFor(context.s.lang),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                         fontSize: 22, fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    achievement.description,
+                    achievement.descriptionFor(context.s.lang),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: 13,
@@ -152,7 +142,7 @@ class _AppShellState extends ConsumerState<AppShell> {
                   ),
                   const SizedBox(height: 20),
                   PrimaryButton(
-                    label: 'MANTAP!',
+                    label: context.s.awesome,
                     height: 46,
                     fontSize: 13,
                     onTap: () => Navigator.of(context).pop(),
@@ -179,8 +169,8 @@ class _AppShellState extends ConsumerState<AppShell> {
           children: [
             widget.shell,
             Positioned(
-              left: 20,
-              right: 20,
+              left: 16,
+              right: 16,
               bottom: bottomInset + 16,
               child: _BottomNav(
                 currentIndex: widget.shell.currentIndex,
@@ -194,173 +184,136 @@ class _AppShellState extends ConsumerState<AppShell> {
   }
 }
 
+/// Capi-style floating nav: warm-cream rounded bar, the active tab morphs
+/// into a soft-pink pill showing its label, and the orange tuner FAB sits
+/// half above the bar (drawn in an unclipped [Stack] so it never gets cut
+/// off).
 class _BottomNav extends StatelessWidget {
   const _BottomNav({required this.currentIndex, required this.onSelect});
 
   final int currentIndex;
   final ValueChanged<int> onSelect;
 
+  static List<({String label, IconData icon, int index})> _items(S s) => [
+        (label: s.navHome, icon: Icons.home_rounded, index: 0),
+        (label: s.navLessons, icon: Icons.menu_book_rounded, index: 1),
+        (label: s.navTools, icon: Icons.widgets_rounded, index: 3),
+        (label: s.navProfile, icon: Icons.person_rounded, index: 4),
+      ];
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    Color tint(int index) =>
-        currentIndex == index ? colors.orange : colors.creamFaint;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(35),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          height: 70,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: colors.navBackground,
-            borderRadius: BorderRadius.circular(35),
-            border: Border.all(color: colors.cream.withValues(alpha: 0.1)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x80000000),
-                blurRadius: 34,
-                offset: Offset(0, 14),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _NavItem(
-                label: 'Home',
-                color: tint(0),
-                onTap: () => onSelect(0),
-                icon: (color) => Container(
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: color, width: 2),
-                    borderRadius: BorderRadius.circular(5),
+    final items = _items(context.s);
+    // Everything (bar + raised FAB) lives inside this box, so nothing can
+    // ever be clipped by a parent or lose its tap target.
+    return SizedBox(
+      height: 92,
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              height: 66,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: colors.navBackground,
+                borderRadius: BorderRadius.circular(33),
+                border: Border.all(
+                  color: colors.cream.withValues(alpha: 0.10),
+                  width: 1.4,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: colors.navy.withValues(
+                        alpha: colors.brightness == Brightness.dark
+                            ? 0.55
+                            : 0.18),
+                    blurRadius: 30,
+                    offset: const Offset(0, 12),
                   ),
-                ),
+                ],
               ),
-              _NavItem(
-                label: 'Lessons',
-                color: tint(1),
-                onTap: () => onSelect(1),
-                icon: (color) => Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _bar(color, 16),
-                    const SizedBox(height: 2),
-                    _bar(color, 16),
-                    const SizedBox(height: 2),
-                    _bar(color, 10),
-                  ],
-                ),
+              child: Row(
+                children: [
+                  Expanded(child: _navItem(context, items[0])),
+                  Expanded(child: _navItem(context, items[1])),
+                  // Breathing room for the raised tuner FAB.
+                  const SizedBox(width: 62),
+                  Expanded(child: _navItem(context, items[2])),
+                  Expanded(child: _navItem(context, items[3])),
+                ],
               ),
-              _TunerFab(onTap: () => onSelect(2)),
-              _NavItem(
-                label: 'Tools',
-                color: tint(3),
-                onTap: () => onSelect(3),
-                icon: (color) => SizedBox(
-                  width: 15,
-                  height: 15,
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 3,
-                    crossAxisSpacing: 3,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      for (var i = 0; i < 4; i++)
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              _NavItem(
-                label: 'Profil',
-                color: tint(4),
-                onTap: () => onSelect(4),
-                icon: (color) => Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration:
-                          BoxDecoration(color: color, shape: BoxShape.circle),
-                    ),
-                    const SizedBox(height: 2),
-                    Container(
-                      width: 13,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(4),
-                          bottom: Radius.circular(1),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+          Positioned(
+            top: 0,
+            child: _TunerFab(
+              active: currentIndex == 2,
+              onTap: () => onSelect(2),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  static Widget _bar(Color color, double width) => Container(
-        width: width,
-        height: 4,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(2),
-        ),
-      );
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.label,
-    required this.color,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final String label;
-  final Color color;
-  final Widget Function(Color) icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 56,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(height: 16, child: Center(child: icon(color))),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
+  Widget _navItem(
+    BuildContext context,
+    ({String label, IconData icon, int index}) item,
+  ) {
+    final colors = context.colors;
+    final active = currentIndex == item.index;
+    return Semantics(
+      label: item.label,
+      selected: active,
+      button: true,
+      child: GestureDetector(
+        onTap: () => onSelect(item.index),
+        behavior: HitTestBehavior.opaque,
+        child: Center(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutBack,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(scale: animation, child: child),
             ),
-          ],
+            child: active
+                ? Container(
+                    key: const ValueKey('pill'),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: colors.pink,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    // Scale down slightly if a label is ever too wide for
+                    // its slot — never truncate to "Less…".
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        item.label,
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF232B54),
+                        ),
+                      ),
+                    ),
+                  )
+                : Icon(
+                    item.icon,
+                    key: const ValueKey('icon'),
+                    size: 24,
+                    color: colors.creamFaint,
+                  ),
+          ),
         ),
       ),
     );
@@ -369,64 +322,44 @@ class _NavItem extends StatelessWidget {
 
 /// Raised orange circle in the middle of the nav — jumps to the tuner.
 class _TunerFab extends StatelessWidget {
-  const _TunerFab({required this.onTap});
+  const _TunerFab({required this.onTap, this.active = false});
 
   final VoidCallback onTap;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return GestureDetector(
-      onTap: onTap,
-      child: Transform.translate(
-        offset: const Offset(0, -22),
-        child: Container(
-          width: 56,
-          height: 56,
+    return Semantics(
+      label: 'Tuner',
+      selected: active,
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          width: 58,
+          height: 58,
           decoration: BoxDecoration(
             gradient: colors.buttonGradient,
             shape: BoxShape.circle,
-            border: Border.all(color: colors.navBorderFill, width: 4),
+            border: Border.all(
+              color: active ? colors.pink : colors.navBorderFill,
+              width: 4,
+            ),
             boxShadow: [
               BoxShadow(
-                color: colors.orangeGradientBottom.withValues(alpha: 0.45),
-                blurRadius: 24,
+                color: colors.orangeGradientBottom
+                    .withValues(alpha: active ? 0.55 : 0.38),
+                blurRadius: 22,
                 offset: const Offset(0, 10),
               ),
             ],
           ),
-          child: Center(
-            child: SizedBox(
-              width: 26,
-              height: 26,
-              child: CustomPaint(painter: _GaugeIconPainter(colors.onOrange)),
-            ),
-          ),
+          child: Icon(Icons.speed_rounded, size: 28, color: colors.onOrange),
         ),
       ),
     );
   }
-}
-
-class _GaugeIconPainter extends CustomPainter {
-  _GaugeIconPainter(this.color);
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round;
-    final center = Offset(size.width / 2, size.height / 2);
-    canvas.drawCircle(center, size.width / 2 - 1.5, paint);
-    // Needle tilted ~30° like the design glyph.
-    canvas.drawLine(center, center.translate(4.5, -6.5), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _GaugeIconPainter oldDelegate) =>
-      oldDelegate.color != color;
 }

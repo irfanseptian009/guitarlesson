@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import '../app/theme/app_palette.dart';
 import 'pressable_scale.dart';
 
-/// Translucent card used across every Strumi screen
-/// (`rgba(255,255,255,0.05)` fill + hairline border in the design).
+/// Standard card used across every Strumi screen. In the light "Capi"
+/// theme it renders as a warm-white card with a soft navy shadow; in the
+/// dark theme it falls back to a translucent glass panel.
 class GlassCard extends StatelessWidget {
   const GlassCard({
     super.key,
@@ -14,6 +15,7 @@ class GlassCard extends StatelessWidget {
     this.fill,
     this.border,
     this.gradient,
+    this.shadow = true,
     this.onTap,
   });
 
@@ -23,6 +25,9 @@ class GlassCard extends StatelessWidget {
   final Color? fill;
   final Color? border;
   final Gradient? gradient;
+
+  /// Set false for nested cards that shouldn't cast their own shadow.
+  final bool shadow;
   final VoidCallback? onTap;
 
   @override
@@ -35,7 +40,16 @@ class GlassCard extends StatelessWidget {
         color: gradient == null ? (fill ?? colors.cardFill) : null,
         gradient: gradient,
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: border ?? colors.cardBorder),
+        border: Border.all(color: border ?? colors.cardBorder, width: 1.4),
+        boxShadow: shadow
+            ? [
+                BoxShadow(
+                  color: colors.cardShadow,
+                  blurRadius: 22,
+                  offset: const Offset(0, 10),
+                ),
+              ]
+            : null,
       ),
       child: child,
     );

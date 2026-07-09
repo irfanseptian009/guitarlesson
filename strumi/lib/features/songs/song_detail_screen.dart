@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
+import '../../core/i18n/strings.dart';
 import '../../core/audio/metronome_engine.dart';
 import '../../core/audio/sound_bank.dart';
 import '../../core/music/chords.dart';
@@ -61,7 +62,7 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
   /// Plays [name] (original chart name) shifted by the transpose offset —
   /// works even when the transposed chord has no catalog voicing.
   void _strumChord(String name) {
-    if (!kChordCatalog.any((c) => c.name == name)) return;
+    if (!kGuitarChords.any((c) => c.name == name)) return;
     final a4 = ref.read(settingsProvider).a4Calibration;
     final midiNotes = [
       for (final m in chordByName(name).midiNotes) m + _transpose,
@@ -173,6 +174,7 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.s;
     return ScreenScaffold(
       gap: 16,
       scrollController: _scroll,
@@ -189,7 +191,7 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
                   color: _song.level.color.withValues(alpha: 0.4)),
             ),
             child: Text(
-              _song.level.label,
+              _levelLabel(_song.level, s),
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -202,23 +204,25 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
         // ------------------------------------------------ info chips
         Row(
           children: [
-            _InfoChip('Kunci ${_song.key}'),
+            _InfoChip('${s.keyWord} ${_song.key}'),
             const SizedBox(width: 8),
             _InfoChip('${_song.bpm} BPM'),
-            const SizedBox(width: 8),
-            Expanded(child: _InfoChip(_song.strumPattern)),
           ],
         ),
 
+        // ------------------------------------------------ strum pattern
+        _StrumPatternCard(pattern: _song.strumPattern),
+
         // ------------------------------------------------ chords used
-        const Text('Chord yang dipakai',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+        Text(s.chordsUsed,
+            style:
+                const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
               for (final name in _song.chordNames)
-                if (kChordCatalog.any((c) => c.name == name))
+                if (kGuitarChords.any((c) => c.name == name))
                   Padding(
                     padding: const EdgeInsets.only(right: 10),
                     child: GlassCard(
@@ -227,7 +231,7 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
                       onTap: () => _strumChord(name),
                       child: Column(
                         children: [
-                          if (kChordCatalog
+                          if (kGuitarChords
                               .any((c) => c.name == _shifted(name)))
                             ChordDiagram(
                                 chord: chordByName(_shifted(name)),
@@ -243,7 +247,7 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                       fontSize: 10,
-                                      color: AppColors.creamFaint),
+                                      color: context.colors.creamFaint),
                                 ),
                               ),
                             ),
@@ -267,9 +271,9 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
               child: PrimaryButton(
                 label: _playing
                     ? (_countInBeatsLeft > 0
-                        ? 'SIAP… $_countInBeatsLeft'
-                        : 'BERHENTI')
-                    : 'MAINKAN CHART',
+                        ? s.ready(_countInBeatsLeft)
+                        : s.stopChart)
+                    : s.playChart,
                 height: 50,
                 fontSize: 14,
                 onTap: _playing ? _stop : _play,
@@ -286,8 +290,8 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
                         horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: _speed == speed
-                          ? AppColors.orange
-                          : Colors.white.withValues(alpha: 0.07),
+                          ? context.colors.orange
+                          : context.colors.cream.withValues(alpha: 0.07),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Text(
@@ -296,8 +300,8 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: _speed == speed
-                            ? AppColors.onOrange
-                            : AppColors.cream.withValues(alpha: 0.7),
+                            ? context.colors.onOrange
+                            : context.colors.cream.withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -313,11 +317,11 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
           child: Row(
             children: [
               Text(
-                'Transpose',
+                s.transpose,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.cream.withValues(alpha: 0.7),
+                  color: context.colors.cream.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(width: 10),
@@ -333,10 +337,10 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
                       ? '0'
                       : '${_transpose > 0 ? '+' : ''}$_transpose',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.orangeLight,
+                    color: context.colors.orangeLight,
                   ),
                 ),
               ),
@@ -354,13 +358,13 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
                       horizontal: 13, vertical: 7),
                   decoration: BoxDecoration(
                     color: _loop
-                        ? AppColors.cardFillActive
-                        : AppColors.cardFill,
+                        ? context.colors.cardFillActive
+                        : context.colors.cardFill,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: _loop
-                          ? AppColors.cardBorderActive
-                          : AppColors.cardBorder,
+                          ? context.colors.cardBorderActive
+                          : context.colors.cardBorder,
                     ),
                   ),
                   child: Row(
@@ -369,8 +373,8 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
                         Icons.repeat_rounded,
                         size: 14,
                         color: _loop
-                            ? AppColors.orangeLight
-                            : AppColors.creamFaint,
+                            ? context.colors.orangeLight
+                            : context.colors.creamFaint,
                       ),
                       const SizedBox(width: 5),
                       Text(
@@ -379,8 +383,8 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: _loop
-                              ? AppColors.orangeLight
-                              : AppColors.cream.withValues(alpha: 0.7),
+                              ? context.colors.orangeLight
+                              : context.colors.cream.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -405,17 +409,18 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
                   children: [
                     Text(
                       section.name.toUpperCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.5,
-                        color: AppColors.orangeLight,
+                        color: context.colors.orangeLight,
                       ),
                     ),
                     const SizedBox(height: 12),
                     GridView.count(
                       crossAxisCount: 4,
                       shrinkWrap: true,
+                      padding: EdgeInsets.zero,
                       physics: const NeverScrollableScrollPhysics(),
                       mainAxisSpacing: 8,
                       crossAxisSpacing: 8,
@@ -426,12 +431,12 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
                             duration: const Duration(milliseconds: 150),
                             decoration: BoxDecoration(
                               color: _barIndex == start + b
-                                  ? AppColors.orange.withValues(alpha: 0.2)
-                                  : Colors.white.withValues(alpha: 0.05),
+                                  ? context.colors.orange.withValues(alpha: 0.2)
+                                  : context.colors.cream.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: _barIndex == start + b
-                                    ? AppColors.orange
+                                    ? context.colors.orange
                                         .withValues(alpha: 0.6)
                                     : Colors.transparent,
                               ),
@@ -446,6 +451,16 @@ class _SongDetailScreenState extends ConsumerState<SongDetailScreen> {
                           ),
                       ],
                     ),
+                    if (section.lyrics != null &&
+                        section.lyrics!.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      for (final line in section.lyrics!)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _LyricLine(
+                              line: line, shift: _shifted),
+                        ),
+                    ],
                   ],
                 ),
               );
@@ -470,7 +485,7 @@ class _StepButton extends StatelessWidget {
         width: 30,
         height: 30,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: context.colors.cream.withValues(alpha: 0.08),
           shape: BoxShape.circle,
         ),
         alignment: Alignment.center,
@@ -492,9 +507,9 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.cardFill,
+        color: context.colors.cardFill,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.cardBorder),
+        border: Border.all(color: context.colors.cardBorder),
       ),
       child: Text(
         label,
@@ -503,9 +518,158 @@ class _InfoChip extends StatelessWidget {
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: AppColors.cream.withValues(alpha: 0.7),
+          color: context.colors.cream.withValues(alpha: 0.7),
         ),
       ),
+    );
+  }
+}
+
+String _levelLabel(SongLevel level, S s) => switch (level) {
+      SongLevel.easy => s.levelEasy,
+      SongLevel.medium => s.levelMedium,
+      SongLevel.hard => s.levelHard,
+    };
+
+/// Visualises `D DU UDU`-style patterns as chunky up/down arrows; falls
+/// back to plain text for fingerpicking/arpeggio descriptions.
+class _StrumPatternCard extends StatelessWidget {
+  const _StrumPatternCard({required this.pattern});
+
+  final String pattern;
+
+  bool get _isArrowable =>
+      pattern.split(' ').every((tok) =>
+          tok.isNotEmpty &&
+          tok.split('').every((c) => c == 'D' || c == 'U'));
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final s = context.s;
+    return GlassCard(
+      radius: 20,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(s.strumPattern,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w700)),
+              if (_isArrowable)
+                Text(s.downUpHint,
+                    style: TextStyle(
+                        fontSize: 10, color: colors.creamFaint)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (_isArrowable)
+            Row(
+              children: [
+                for (final token in pattern.split(' ')) ...[
+                  for (final c in token.split(''))
+                    Container(
+                      width: 30,
+                      height: 34,
+                      margin: const EdgeInsets.only(right: 5),
+                      decoration: BoxDecoration(
+                        color: c == 'D'
+                            ? colors.navy
+                            : colors.pink,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        c == 'D'
+                            ? Icons.arrow_downward_rounded
+                            : Icons.arrow_upward_rounded,
+                        size: 17,
+                        color: c == 'D'
+                            ? colors.onNavy
+                            : const Color(0xFF232B54),
+                      ),
+                    ),
+                  const SizedBox(width: 8),
+                ],
+              ],
+            )
+          else
+            Text(
+              pattern,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: colors.orangeLight,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One lyric line: chord names raised above the syllable they hit.
+/// Input format: `A[G]mazing [G7]grace…`.
+class _LyricLine extends StatelessWidget {
+  const _LyricLine({required this.line, required this.shift});
+
+  final String line;
+  final String Function(String) shift;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final segments = <(String? chord, String text)>[];
+    final regex = RegExp(r'\[([^\]]+)\]');
+    var cursor = 0;
+    String? pending;
+    for (final m in regex.allMatches(line)) {
+      final before = line.substring(cursor, m.start);
+      if (before.isNotEmpty || pending != null) {
+        segments.add((pending, before));
+      }
+      pending = m.group(1);
+      cursor = m.end;
+    }
+    segments.add((pending, line.substring(cursor)));
+    // A trailing chord with no lyric text still needs breathing room so
+    // it doesn't visually merge with the previous chord label.
+    for (var i = 0; i < segments.length; i++) {
+      if (segments[i].$1 != null && segments[i].$2.isEmpty) {
+        segments[i] = (segments[i].$1, ' ');
+      }
+    }
+
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.end,
+      children: [
+        for (final (chord, text) in segments)
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                chord == null ? '' : shift(chord),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: colors.orangeLight,
+                ),
+              ),
+              Text(
+                text,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  height: 1.35,
+                  fontWeight: FontWeight.w500,
+                  color: colors.cream.withValues(alpha: 0.85),
+                ),
+              ),
+            ],
+          ),
+      ],
     );
   }
 }

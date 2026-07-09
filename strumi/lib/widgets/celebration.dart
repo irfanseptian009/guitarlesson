@@ -3,8 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../app/theme/app_colors.dart';
-
 /// Full-screen confetti burst rendered in the root overlay.
 /// Fire-and-forget: `Celebration.show(context)`.
 abstract final class Celebration {
@@ -39,13 +37,14 @@ class _Particle {
         color = _palette[random.nextInt(_palette.length)],
         isCircle = random.nextBool();
 
+  // Fixed Capi party colors — bright enough on both themes.
   static const _palette = [
-    AppColors.orange,
-    AppColors.orangeLight,
-    AppColors.blue,
-    AppColors.yellow,
-    AppColors.green,
-    AppColors.purple,
+    Color(0xFFF0521F), // orange
+    Color(0xFFFFC72C), // sun yellow
+    Color(0xFFEF6FAC), // pink
+    Color(0xFF3554D1), // royal blue
+    Color(0xFF1FA05A), // green
+    Color(0xFF7A4FD8), // purple
   ];
 
   final double x;

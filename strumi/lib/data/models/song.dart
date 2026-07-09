@@ -20,12 +20,16 @@ enum SongLevel {
 
 /// A named section of a song's chord chart (Intro, Verse, ...).
 class SongSection {
-  const SongSection(this.name, this.bars);
+  const SongSection(this.name, this.bars, {this.lyrics});
 
   final String name;
 
   /// One chord name per bar.
   final List<String> bars;
+
+  /// Optional lyric lines with inline chord markers, e.g.
+  /// `[C]Burung kakak[G7]tua`. Only present for public-domain songs.
+  final List<String>? lyrics;
 }
 
 /// A song in the library. Charts are chord-progression only (no lyrics).
@@ -53,6 +57,9 @@ class Song {
   /// E.g. `D DU UDU` — D = down, U = up.
   final String strumPattern;
   final List<SongSection> sections;
+
+  bool get hasLyrics =>
+      sections.any((sec) => sec.lyrics != null && sec.lyrics!.isNotEmpty);
 
   /// Distinct chords used, in order of first appearance.
   List<String> get chordNames {

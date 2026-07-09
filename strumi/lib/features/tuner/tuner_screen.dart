@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,7 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme/app_palette.dart';
 import '../../core/audio/mic_service.dart';
+import '../../core/dsp/fft.dart';
 import '../../core/dsp/yin.dart';
+import '../../core/i18n/strings.dart';
 import '../../core/music/note_utils.dart';
 import '../../core/music/tunings.dart';
 import '../../core/utils/practice_clock.dart';
@@ -30,13 +33,20 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
 
   late final MicService _mic;
   late final PracticeClock _clock;
-  final YinDetector _detector =
-      YinDetector(sampleRate: MicService.sampleRate.toDouble());
+  final YinDetector _detector = YinDetector(
+    sampleRate: MicService.sampleRate.toDouble(),
+  );
 
   static const _holdToConfirm = Duration(milliseconds: 1200);
 
   Timer? _timer;
   bool _micDenied = false;
+
+  /// Downsampled copy of the newest mic window for the waveform.
+  Float64List? _wave;
+
+  /// Low-bin FFT magnitudes for the spectrum bars.
+  Float64List? _spectrum;
   int? _manualString;
   int _activeString = 0;
   double _cents = 0;
@@ -66,7 +76,8 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
     _mic = ref.read(micServiceProvider);
     final progress = ref.read(progressProvider.notifier);
     _clock = PracticeClock(
-        (s) => progress.addPracticeSeconds(PracticeCategory.tuner, s));
+      (s) => progress.addPracticeSeconds(PracticeCategory.tuner, s),
+    );
     unawaited(_startMic());
   }
 
@@ -75,20 +86,33 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
     if (!mounted) return;
     setState(() => _micDenied = !ok);
     if (ok) {
-      _timer ??=
-          Timer.periodic(const Duration(milliseconds: 120), (_) => _poll());
+      _timer ??= Timer.periodic(
+        const Duration(milliseconds: 120),
+        (_) => _poll(),
+      );
     }
   }
 
   void _poll() {
     final samples = _mic.latest(_window);
     if (samples == null || !mounted) return;
+
+    // Feed the live visualizer regardless of pitch confidence.
+    final wave = Float64List(_window ~/ 8);
+    for (var i = 0; i < wave.length; i++) {
+      wave[i] = samples[i * 8];
+    }
+    _wave = wave;
+    final mags = Fft.magnitudeSpectrum(samples);
+    // Guitar range lives in the first ~64 bins (0–1.4 kHz @ 44.1 kHz).
+    _spectrum = Float64List.sublistView(mags, 0, 64);
+
     final estimate = _detector.estimate(samples);
     if (estimate == null ||
         estimate.confidence < 0.85 ||
         estimate.frequency < 55 ||
         estimate.frequency > 1000) {
-      if (!_hasSignal) setState(() {});
+      setState(() {});
       return;
     }
 
@@ -102,8 +126,9 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
       var bestAbs = double.infinity;
       for (var i = 0; i < 6; i++) {
         final c = NoteUtils.centsBetween(
-                estimate.frequency, tuning.frequencyOf(i, a4: a4))
-            .abs();
+          estimate.frequency,
+          tuning.frequencyOf(i, a4: a4),
+        ).abs();
         if (c < bestAbs) {
           bestAbs = c;
           best = i;
@@ -113,8 +138,9 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
     }
 
     final cents = NoteUtils.centsBetween(
-            estimate.frequency, tuning.frequencyOf(target, a4: a4))
-        .clamp(-50.0, 50.0);
+      estimate.frequency,
+      tuning.frequencyOf(target, a4: a4),
+    ).clamp(-50.0, 50.0);
 
     setState(() {
       _activeString = target!;
@@ -139,9 +165,14 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
     HapticFeedback.mediumImpact();
     final settings = ref.read(settingsProvider);
     final tuning = kTunings[settings.tuningIndex];
-    unawaited(ref.read(soundBankProvider).playPluck(
-        tuning.midiNotes[_activeString],
-        a4: settings.a4Calibration));
+    unawaited(
+      ref
+          .read(soundBankProvider)
+          .playPluck(
+            tuning.midiNotes[_activeString],
+            a4: settings.a4Calibration,
+          ),
+    );
     if (_manualString != null) {
       Timer(const Duration(milliseconds: 700), () {
         if (!mounted || _manualString == null) return;
@@ -166,6 +197,7 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
+    final st = context.s;
     final tuning = kTunings[settings.tuningIndex];
     final a4 = settings.a4Calibration;
     final inTune = _isInTune;
@@ -174,16 +206,16 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
     final String status;
     final Color statusColor;
     if (!_hasSignal) {
-      status = 'Petik senar…';
+      status = st.pluckString;
       statusColor = context.colors.creamDim;
     } else if (inTune) {
-      status = 'Pas! Senar sudah setem';
+      status = st.inTuneMsg;
       statusColor = context.colors.green;
     } else if (_cents > 0) {
-      status = 'Sedikit tinggi — kendurkan';
+      status = st.slightlySharp;
       statusColor = context.colors.orangeLight;
     } else {
-      status = 'Sedikit rendah — kencangkan';
+      status = st.slightlyFlat;
       statusColor = context.colors.orangeLight;
     }
 
@@ -192,8 +224,10 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Tuner',
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700)),
+            const Text(
+              'Tuner',
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+            ),
             _StatusBadge(
               denied: _micDenied,
               manualNote: _manualString == null
@@ -219,24 +253,32 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
               : context.colors.cardBorder,
           child: Column(
             children: [
-              TweenAnimationBuilder<double>(
-                tween: Tween(end: _hasSignal ? _cents : 0),
-                duration: const Duration(milliseconds: 140),
-                curve: Curves.easeOut,
-                builder: (context, cents, _) => CustomPaint(
-                  size: const Size(260, 140),
-                  painter: _GaugePainter(cents: cents, colors: context.colors),
+              RepaintBoundary(
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(end: _hasSignal ? _cents : 0),
+                  duration: const Duration(milliseconds: 140),
+                  curve: Curves.easeOut,
+                  builder: (context, cents, _) => CustomPaint(
+                    size: const Size(260, 140),
+                    painter: _GaugePainter(
+                      cents: cents,
+                      colors: context.colors,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 6),
-              Text(noteName,
-                  style: const TextStyle(
-                      fontSize: 52,
-                      fontWeight: FontWeight.w800,
-                      height: 1)),
+              Text(
+                noteName,
+                style: const TextStyle(
+                  fontSize: 52,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                ),
+              ),
               const SizedBox(height: 6),
               Text(
-                _confirmed ? 'Terkunci ✓ — senar pas!' : status,
+                _confirmed ? st.lockedIn : status,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -247,7 +289,7 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
               Text(
                 _hasSignal && _frequency != null
                     ? '${_cents >= 0 ? '+' : ''}${_cents.round()} cents · '
-                        '${_frequency!.toStringAsFixed(1)} Hz'
+                          '${_frequency!.toStringAsFixed(1)} Hz'
                     : '— cents · — Hz',
                 style: TextStyle(
                   fontSize: 12,
@@ -269,10 +311,12 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
                       child: LinearProgressIndicator(
                         value: _holdProgress,
                         minHeight: 4,
-                        backgroundColor:
-                            Colors.white.withValues(alpha: 0.10),
+                        backgroundColor: context.colors.cream.withValues(
+                          alpha: 0.10,
+                        ),
                         valueColor: AlwaysStoppedAnimation(
-                            context.colors.green),
+                          context.colors.green,
+                        ),
                       ),
                     ),
                   ),
@@ -299,9 +343,11 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
                       _inTuneSince = null;
                       _confirmed = false;
                     });
-                    unawaited(ref
-                        .read(soundBankProvider)
-                        .playPluck(tuning.midiNotes[i], a4: a4));
+                    unawaited(
+                      ref
+                          .read(soundBankProvider)
+                          .playPluck(tuning.midiNotes[i], a4: a4),
+                    );
                   },
                 ),
               ),
@@ -309,13 +355,26 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
           ],
         ),
 
+        // ------------------------------------------------ live sound viz
+        _LiveSoundCard(
+          wave: _wave,
+          spectrum: _spectrum,
+          active: _hasSignal,
+          inTune: inTune,
+        ),
+
         // ------------------------------------------------ preset card
         GlassCard(
           radius: 20,
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           onTap: () {
-            ref.read(settingsProvider.notifier).update((s) => s.copyWith(
-                tuningIndex: (s.tuningIndex + 1) % kTunings.length));
+            ref
+                .read(settingsProvider.notifier)
+                .update(
+                  (s) => s.copyWith(
+                    tuningIndex: (s.tuningIndex + 1) % kTunings.length,
+                  ),
+                );
             setState(() {
               _manualString = null;
               _inTuneSince = null;
@@ -328,15 +387,20 @@ class _TunerScreenState extends ConsumerState<TunerScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Tuning preset',
-                      style: TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w700)),
+                  Text(
+                    st.tuningPreset,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     kTunings.map((t) => t.name).join(' · '),
                     style: TextStyle(
-                        fontSize: 11,
-                        color: context.colors.cream.withValues(alpha: 0.5)),
+                      fontSize: 11,
+                      color: context.colors.cream.withValues(alpha: 0.5),
+                    ),
                   ),
                 ],
               ),
@@ -371,10 +435,10 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = denied ? context.colors.red : context.colors.blue;
     final label = denied
-        ? 'Mic mati · ketuk'
+        ? context.s.micOffTap
         : manualNote != null
-            ? 'Manual · $manualNote'
-            : 'Auto · mic aktif';
+        ? '${context.s.manual} · $manualNote'
+        : context.s.autoMicActive;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -392,9 +456,14 @@ class _StatusBadge extends StatelessWidget {
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
             const SizedBox(width: 6),
-            Text(label,
-                style: TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
           ],
         ),
       ),
@@ -423,11 +492,15 @@ class _StringButton extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         height: 62,
         decoration: BoxDecoration(
-          color: active ? context.colors.cardFillActive : context.colors.cardFill,
+          color: active
+              ? context.colors.cardFillActive
+              : context.colors.cardFill,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-              color:
-                  active ? context.colors.cardBorderActive : context.colors.cardBorder),
+            color: active
+                ? context.colors.cardBorderActive
+                : context.colors.cardBorder,
+          ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -437,7 +510,9 @@ class _StringButton extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: active ? context.colors.orangeLight : context.colors.cream,
+                color: active
+                    ? context.colors.orangeLight
+                    : context.colors.cream,
               ),
             ),
             const SizedBox(height: 2),
@@ -482,7 +557,12 @@ class _GaugePainter extends CustomPainter {
     canvas.drawArc(rect, math.pi + math.pi / 3, math.pi / 3, false, arcPaint);
     arcPaint.color = colors.blue.withValues(alpha: 0.55);
     canvas.drawArc(
-        rect, math.pi + 2 * math.pi / 3, math.pi / 3, false, arcPaint);
+      rect,
+      math.pi + 2 * math.pi / 3,
+      math.pi / 3,
+      false,
+      arcPaint,
+    );
 
     // Needle: rotates ±85° for ±50 cents.
     final angle = (cents * 1.7) * math.pi / 180;
@@ -491,16 +571,12 @@ class _GaugePainter extends CustomPainter {
       ..strokeWidth = 4
       ..strokeCap = StrokeCap.round
       ..maskFilter = const MaskFilter.blur(BlurStyle.solid, 2);
-    final tip = center +
-        Offset(math.sin(angle), -math.cos(angle)) * (radius - stroke);
+    final tip =
+        center + Offset(math.sin(angle), -math.cos(angle)) * (radius - stroke);
     canvas.drawLine(center, tip, needlePaint);
 
     // Hub.
-    canvas.drawCircle(
-      center,
-      11,
-      Paint()..color = colors.orange,
-    );
+    canvas.drawCircle(center, 11, Paint()..color = colors.orange);
     canvas.drawCircle(
       center,
       11,
@@ -534,4 +610,253 @@ class _GaugePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _GaugePainter oldDelegate) =>
       oldDelegate.cents != cents || oldDelegate.colors != colors;
+}
+
+/// Navy "studio" card with a live waveform and FFT spectrum of the mic —
+/// keeps the tuner feeling alive below the gauge.
+class _LiveSoundCard extends StatelessWidget {
+  const _LiveSoundCard({
+    required this.wave,
+    required this.spectrum,
+    required this.active,
+    required this.inTune,
+  });
+
+  final Float64List? wave;
+  final Float64List? spectrum;
+  final bool active;
+  final bool inTune;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final accent = inTune ? colors.green : colors.yellow;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        color: colors.navy,
+        padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: active ? colors.pinkStrong : colors.creamGhost,
+                    shape: BoxShape.circle,
+                    boxShadow: active
+                        ? [
+                            BoxShadow(
+                              color: colors.pinkStrong.withValues(alpha: 0.6),
+                              blurRadius: 8,
+                            ),
+                          ]
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  context.s.liveSound,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: colors.onNavy,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  context.s.waveform.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 9,
+                    letterSpacing: 1.5,
+                    fontWeight: FontWeight.w700,
+                    color: colors.onNavy.withValues(alpha: 0.45),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            RepaintBoundary(
+              child: SizedBox(
+                height: 56,
+                width: double.infinity,
+                child: CustomPaint(
+                  painter: _WaveformPainter(
+                    wave: active ? wave : null,
+                    color: accent,
+                    faint: colors.onNavy.withValues(alpha: 0.22),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  context.s.spectrum.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 9,
+                    letterSpacing: 1.5,
+                    fontWeight: FontWeight.w700,
+                    color: colors.onNavy.withValues(alpha: 0.45),
+                  ),
+                ),
+                Text(
+                  '82 Hz — 1.4 kHz',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontFamily: 'monospace',
+                    color: colors.onNavy.withValues(alpha: 0.35),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            RepaintBoundary(
+              child: SizedBox(
+                height: 44,
+                width: double.infinity,
+                child: CustomPaint(
+                  painter: _SpectrumPainter(
+                    spectrum: active ? spectrum : null,
+                    low: colors.blue,
+                    high: colors.pinkStrong,
+                    faint: colors.onNavy.withValues(alpha: 0.14),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Oscilloscope-style waveform line.
+class _WaveformPainter extends CustomPainter {
+  _WaveformPainter({
+    required this.wave,
+    required this.color,
+    required this.faint,
+  });
+
+  final Float64List? wave;
+  final Color color;
+  final Color faint;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final midY = size.height / 2;
+    final baseline = Paint()
+      ..color = faint
+      ..strokeWidth = 1;
+    canvas.drawLine(Offset(0, midY), Offset(size.width, midY), baseline);
+
+    final w = wave;
+    if (w == null || w.isEmpty) return;
+
+    // Normalize so quiet playing still shows a visible wave.
+    var peak = 0.0;
+    for (final v in w) {
+      final a = v.abs();
+      if (a > peak) peak = a;
+    }
+    final gain = peak < 0.02 ? 0.0 : (0.92 / peak).clamp(1.0, 30.0);
+
+    final path = Path();
+    for (var i = 0; i < w.length; i++) {
+      final x = i / (w.length - 1) * size.width;
+      final y = midY - (w[i] * gain).clamp(-1.0, 1.0) * midY;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = color,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _WaveformPainter oldDelegate) => true;
+}
+
+/// Frequency bars, blue lows blending into pink highs.
+class _SpectrumPainter extends CustomPainter {
+  _SpectrumPainter({
+    required this.spectrum,
+    required this.low,
+    required this.high,
+    required this.faint,
+  });
+
+  final Float64List? spectrum;
+  final Color low;
+  final Color high;
+  final Color faint;
+
+  static const _bars = 32;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final barWidth = size.width / _bars;
+    final paint = Paint();
+    final mags = spectrum;
+
+    double magOf(int bar) {
+      if (mags == null || mags.isEmpty) return 0;
+      final per = mags.length / _bars;
+      var sum = 0.0;
+      final from = (bar * per).floor();
+      final to = math.max(from + 1, ((bar + 1) * per).floor());
+      for (var i = from; i < to && i < mags.length; i++) {
+        sum += mags[i];
+      }
+      return sum / (to - from);
+    }
+
+    var peak = 1e-9;
+    final values = List<double>.generate(_bars, magOf);
+    for (final v in values) {
+      if (v > peak) peak = v;
+    }
+
+    for (var i = 0; i < _bars; i++) {
+      final t = i / (_bars - 1);
+      // Log-ish scaling reads better than linear for audio.
+      final level = mags == null
+          ? 0.0
+          : (math.log(1 + 9 * values[i] / peak) / math.log(10)).clamp(0.0, 1.0);
+      final barHeight = math.max(2.5, level * size.height);
+      paint.color = mags == null
+          ? faint
+          : Color.lerp(low, high, t)!.withValues(alpha: 0.35 + 0.65 * level);
+      final rect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          i * barWidth + barWidth * 0.18,
+          size.height - barHeight,
+          barWidth * 0.64,
+          barHeight,
+        ),
+        const Radius.circular(2),
+      );
+      canvas.drawRRect(rect, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SpectrumPainter oldDelegate) => true;
 }

@@ -12,10 +12,6 @@ class DailyChallenge {
   final int xp;
 
   String get title => chords.join(' → ');
-
-  String get description =>
-      'Mainkan transisi ${chords.join(' → ')} sebanyak $targetCycles'
-      'x tanpa jeda. AI akan menilai kebersihan tiap chord.';
 }
 
 const List<DailyChallenge> _rotation = [

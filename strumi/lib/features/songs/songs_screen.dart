@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
+import '../../core/i18n/strings.dart';
 import '../../data/catalogs/songs_catalog.dart';
 import '../../data/models/song.dart';
 import '../../widgets/glass_card.dart';
@@ -17,13 +18,14 @@ class SongsScreen extends StatefulWidget {
 }
 
 class _SongsScreenState extends State<SongsScreen> {
+  // Fixed album-art tile colors (solid accents, same on both themes).
   static const _artColors = [
-    AppColors.orangeLight,
-    AppColors.blue,
-    AppColors.yellow,
-    AppColors.green,
-    AppColors.red,
-    AppColors.purple,
+    Color(0xFFF0521F),
+    Color(0xFF3554D1),
+    Color(0xFFEFA51D),
+    Color(0xFF1FA05A),
+    Color(0xFFEF6FAC),
+    Color(0xFF7A4FD8),
   ];
 
   String _genre = 'Semua';
@@ -38,10 +40,10 @@ class _SongsScreenState extends State<SongsScreen> {
     return ScreenScaffold(
       gap: 16,
       children: [
-        const SubScreenHeader(title: 'Songs'),
+        SubScreenHeader(title: context.s.songs),
         Text(
-          'Semua genre · chart auto-play + slow-downer',
-          style: TextStyle(fontSize: 13, color: AppColors.creamDim),
+          context.s.songsSubtitle,
+          style: TextStyle(fontSize: 13, color: context.colors.creamDim),
         ),
         Wrap(
           spacing: 8,
@@ -49,7 +51,7 @@ class _SongsScreenState extends State<SongsScreen> {
           children: [
             for (final genre in kSongGenres)
               PillChip(
-                label: genre,
+                label: genre == 'Semua' ? context.s.genreAll : genre,
                 selected: _genre == genre,
                 onTap: () => setState(() => _genre = genre),
               ),
@@ -95,7 +97,7 @@ class _SongRow extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
-                color: AppColors.onOrange,
+                color: Colors.white,
               ),
             ),
           ),
@@ -112,7 +114,7 @@ class _SongRow extends StatelessWidget {
                   '${song.artist} · ${song.genre}',
                   style: TextStyle(
                       fontSize: 11,
-                      color: AppColors.cream.withValues(alpha: 0.5)),
+                      color: context.colors.cream.withValues(alpha: 0.5)),
                 ),
               ],
             ),
@@ -126,7 +128,11 @@ class _SongRow extends StatelessWidget {
                   color: song.level.color.withValues(alpha: 0.4)),
             ),
             child: Text(
-              song.level.label,
+              switch (song.level) {
+                SongLevel.easy => context.s.levelEasy,
+                SongLevel.medium => context.s.levelMedium,
+                SongLevel.hard => context.s.levelHard,
+              },
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,

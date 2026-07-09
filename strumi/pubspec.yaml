@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.1.0+2
+version: 1.2.0+3
 
 environment:
   sdk: ^3.12.0
@@ -44,6 +44,7 @@ dependencies:
   flutter_local_notifications: ^22.0.1
   flutter_timezone: ^5.1.0
   timezone: ^0.11.1
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:
@@ -77,6 +78,10 @@ flutter:
 
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
+
+  # Illustrated instrument art for the guitar picker / Home hero card.
+  assets:
+    - assets/guitar-png/
 
   # Bundled locally (instead of google_fonts' runtime CDN fetch) so the
   # Sora typeface is available offline and doesn't jank the first frame.

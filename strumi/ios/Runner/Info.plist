@@ -26,6 +26,8 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Strumi uses your photo library to set a profile picture.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Strumi menggunakan mikrofon untuk tuner, deteksi chord, dan feedback AI saat kamu berlatih gitar.</string>
 	<key>UIApplicationSceneManifest</key>

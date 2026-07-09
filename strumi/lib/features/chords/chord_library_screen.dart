@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
+import '../../core/i18n/strings.dart';
 import '../../core/music/chords.dart';
 import '../../core/utils/practice_clock.dart';
 import '../../data/models/progress_state.dart';
@@ -29,6 +30,9 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
   late final PracticeClock _clock;
   final TextEditingController _search = TextEditingController();
 
+  /// Which instrument's chords are shown.
+  Instrument _instrument = Instrument.guitar;
+
   /// null = all levels; otherwise filter by [ChordLevel].
   ChordLevel? _levelFilter;
   bool _favoritesOnly = false;
@@ -52,12 +56,22 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
     final query = _search.text.trim().toLowerCase();
     final favorites = ref.read(progressProvider).favoriteChords;
     return [
-      for (final chord in kChordCatalog)
+      for (final chord in chordsFor(_instrument))
         if ((query.isEmpty || chord.name.toLowerCase().startsWith(query)) &&
             (_levelFilter == null || chord.level == _levelFilter) &&
             (!_favoritesOnly || favorites.contains(chord.name)))
           chord,
     ];
+  }
+
+  void _setInstrument(Instrument instrument) {
+    if (_instrument == instrument) return;
+    setState(() {
+      _instrument = instrument;
+      _levelFilter = null;
+      _favoritesOnly = false;
+      _selected = chordsFor(instrument).first;
+    });
   }
 
   void _playSelected() {
@@ -68,6 +82,7 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final st = context.s;
     final progress = ref.watch(progressProvider);
     final mastered = progress.masteredChords;
     final favorites = progress.favoriteChords;
@@ -76,7 +91,51 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
     return ScreenScaffold(
       gap: 16,
       children: [
-        const SubScreenHeader(title: 'Chord Library'),
+        SubScreenHeader(title: st.chordLibrary),
+
+        // ---------------------------------------------- instrument tabs
+        Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: context.colors.cream.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Row(
+            children: [
+              for (final (instrument, label) in [
+                (Instrument.guitar, st.instrumentGuitar),
+                (Instrument.ukulele, st.instrumentUkulele),
+                (Instrument.bass, st.instrumentBass),
+              ])
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => _setInstrument(instrument),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      decoration: BoxDecoration(
+                        color: _instrument == instrument
+                            ? context.colors.navy
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: _instrument == instrument
+                              ? context.colors.onNavy
+                              : context.colors.creamDim,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
 
         // ------------------------------------------------ detector banner
         GlassCard(
@@ -86,11 +145,11 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppColors.blue.withValues(alpha: 0.14),
-              Colors.white.withValues(alpha: 0.04),
+              context.colors.blue.withValues(alpha: 0.14),
+              context.colors.cream.withValues(alpha: 0.04),
             ],
           ),
-          border: AppColors.blue.withValues(alpha: 0.28),
+          border: context.colors.blue.withValues(alpha: 0.28),
           onTap: () => context.push('/tools/chord-detector'),
           child: Row(
             children: [
@@ -98,7 +157,7 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.blue.withValues(alpha: 0.18),
+                  color: context.colors.blue.withValues(alpha: 0.18),
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
@@ -107,7 +166,7 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
                   height: 18,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5),
-                    border: Border.all(color: AppColors.blue, width: 2),
+                    border: Border.all(color: context.colors.blue, width: 2),
                   ),
                 ),
               ),
@@ -116,24 +175,24 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Chord Detector',
-                        style: TextStyle(
+                    Text(st.chordDetector,
+                        style: const TextStyle(
                             fontSize: 14, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 2),
                     Text(
-                      'Mainkan chord apa pun — AI menebak namanya',
+                      st.detectorBannerDesc,
                       style: TextStyle(
-                          fontSize: 12, color: AppColors.creamDim),
+                          fontSize: 12, color: context.colors.creamDim),
                     ),
                   ],
                 ),
               ),
-              const Text(
-                'Dengar ›',
+              Text(
+                '${st.listen} ›',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.blue,
+                  color: context.colors.blue,
                 ),
               ),
             ],
@@ -174,8 +233,8 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
                                 : Icons.star_border_rounded,
                             size: 24,
                             color: favorites.contains(_selected.name)
-                                ? AppColors.yellow
-                                : AppColors.creamFaint,
+                                ? context.colors.yellowDeep
+                                : context.colors.creamFaint,
                           ),
                         ),
                         const SizedBox(width: 6),
@@ -186,15 +245,15 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                  color: AppColors.green
+                                  color: context.colors.green
                                       .withValues(alpha: 0.45)),
                             ),
-                            child: const Text(
-                              'Dikuasai ✓',
+                            child: Text(
+                              st.masteredBadge,
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.green,
+                                color: context.colors.green,
                               ),
                             ),
                           ),
@@ -202,20 +261,22 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _selected.tip,
+                      _selected.tipFor(st.lang),
                       style: TextStyle(
                         fontSize: 12,
                         height: 1.5,
-                        color: AppColors.creamDim,
+                        color: context.colors.creamDim,
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
-                        _ActionPill(label: '▶ Dengar', onTap: _playSelected),
-                        const SizedBox(width: 8),
                         _ActionPill(
-                          label: 'Cek dengan AI',
+                            label: '▶ ${st.listen}', onTap: _playSelected),
+                        _ActionPill(
+                          label: st.checkWithAi,
                           onTap: () =>
                               context.push('/tools/chord-detector'),
                         ),
@@ -234,42 +295,42 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
           onChanged: (_) => setState(() {}),
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           decoration: InputDecoration(
-            hintText: 'Cari chord… (Am, F, Cmaj7)',
+            hintText: st.searchChordsHint,
             hintStyle: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w400,
-              color: AppColors.creamFaint,
+              color: context.colors.creamFaint,
             ),
             prefixIcon:
-                Icon(Icons.search_rounded, color: AppColors.creamFaint),
+                Icon(Icons.search_rounded, color: context.colors.creamFaint),
             suffixIcon: _search.text.isEmpty
                 ? null
                 : IconButton(
                     icon: Icon(Icons.close_rounded,
-                        size: 18, color: AppColors.creamFaint),
+                        size: 18, color: context.colors.creamFaint),
                     onPressed: () {
                       _search.clear();
                       setState(() {});
                     },
                   ),
             filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.06),
+            fillColor: context.colors.cream.withValues(alpha: 0.06),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide:
-                  BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+                  BorderSide(color: context.colors.cream.withValues(alpha: 0.12)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide:
-                  BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+                  BorderSide(color: context.colors.cream.withValues(alpha: 0.12)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide:
-                  const BorderSide(color: AppColors.orange, width: 1.5),
+                  BorderSide(color: context.colors.orange, width: 1.5),
             ),
           ),
         ),
@@ -278,7 +339,7 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
           child: Row(
             children: [
               PillChip(
-                label: 'Semua',
+                label: st.all,
                 selected: _levelFilter == null && !_favoritesOnly,
                 onTap: () => setState(() {
                   _levelFilter = null;
@@ -287,7 +348,7 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
               ),
               const SizedBox(width: 8),
               PillChip(
-                label: '★ Favorit',
+                label: '★ ${st.favorites}',
                 selected: _favoritesOnly,
                 onTap: () => setState(() {
                   _favoritesOnly = !_favoritesOnly;
@@ -297,7 +358,7 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
               for (final level in ChordLevel.values) ...[
                 const SizedBox(width: 8),
                 PillChip(
-                  label: level.label,
+                  label: _levelName(level, st),
                   selected: _levelFilter == level,
                   onTap: () => setState(() {
                     _levelFilter = _levelFilter == level ? null : level;
@@ -315,11 +376,9 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Center(
               child: Text(
-                _favoritesOnly
-                    ? 'Belum ada chord favorit — bintangi dari kartu detail.'
-                    : 'Tidak ada chord yang cocok.',
+                _favoritesOnly ? st.noFavorites : st.noMatches,
                 style:
-                    TextStyle(fontSize: 12, color: AppColors.creamFaint),
+                    TextStyle(fontSize: 12, color: context.colors.creamFaint),
               ),
             ),
           )
@@ -350,6 +409,13 @@ class _ChordLibraryScreenState extends ConsumerState<ChordLibraryScreen> {
   }
 }
 
+String _levelName(ChordLevel level, S s) => switch (level) {
+      ChordLevel.dasar => s.lang == 'id' ? 'Dasar' : 'Basic',
+      ChordLevel.barre => 'Barre',
+      ChordLevel.blues => 'Blues',
+      ChordLevel.jazz => 'Jazz',
+    };
+
 class _ActionPill extends StatelessWidget {
   const _ActionPill({required this.label, required this.onTap});
 
@@ -363,17 +429,17 @@ class _ActionPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: AppColors.orange.withValues(alpha: 0.15),
+          color: context.colors.orange.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(14),
           border:
-              Border.all(color: AppColors.orange.withValues(alpha: 0.4)),
+              Border.all(color: context.colors.orange.withValues(alpha: 0.4)),
         ),
         child: Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: AppColors.orangeLight,
+            color: context.colors.orangeLight,
           ),
         ),
       ),
@@ -400,29 +466,29 @@ class _ChordTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color border;
     if (selected) {
-      border = AppColors.cardBorderActive;
+      border = context.colors.cardBorderActive;
     } else if (mastered) {
-      border = AppColors.green.withValues(alpha: 0.35);
+      border = context.colors.green.withValues(alpha: 0.35);
     } else {
-      border = AppColors.cardBorder;
+      border = context.colors.cardBorder;
     }
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         decoration: BoxDecoration(
-          color: selected ? AppColors.cardFillActive : AppColors.cardFill,
+          color: selected ? context.colors.cardFillActive : context.colors.cardFill,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: border),
         ),
         child: Stack(
           children: [
             if (favorite)
-              const Positioned(
+              Positioned(
                 top: 5,
                 right: 7,
                 child: Icon(Icons.star_rounded,
-                    size: 11, color: AppColors.yellow),
+                    size: 11, color: context.colors.yellowDeep),
               ),
             Center(
               child: Column(
@@ -434,14 +500,14 @@ class _ChordTile extends StatelessWidget {
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
                       color:
-                          selected ? AppColors.orangeLight : AppColors.cream,
+                          selected ? context.colors.orangeLight : context.colors.cream,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    chord.level.label,
-                    style:
-                        TextStyle(fontSize: 10, color: AppColors.creamFaint),
+                    _levelName(chord.level, context.s),
+                    style: TextStyle(
+                        fontSize: 10, color: context.colors.creamFaint),
                   ),
                 ],
               ),

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../app/theme/app_palette.dart';
 import 'pressable_scale.dart';
 
-/// Selectable pill chip with the design's orange active treatment.
+/// Selectable pill chip. Active = solid navy pill with warm-cream label
+/// (the "Set up" pill treatment from the Capi design).
 class PillChip extends StatelessWidget {
   const PillChip({
     super.key,
@@ -27,23 +28,35 @@ class PillChip extends StatelessWidget {
       onTap: onTap,
       scale: 0.94,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 8),
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        padding:
+            EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 9),
         decoration: BoxDecoration(
-          color: selected ? colors.cardFillActive : colors.cardFill,
-          borderRadius: BorderRadius.circular(15),
+          color: selected ? colors.navy : colors.cardFill,
+          borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: selected ? colors.cardBorderActive : colors.cardBorder,
+            color: selected ? colors.navy : colors.cardBorder,
+            width: 1.4,
           ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: colors.navy.withValues(alpha: 0.28),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : null,
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: fontSize,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
             color: selected
-                ? colors.orangeLight
-                : colors.cream.withValues(alpha: 0.7),
+                ? colors.onNavy
+                : colors.cream.withValues(alpha: 0.72),
           ),
         ),
       ),

@@ -119,6 +119,90 @@ const List<Song> kSongCatalog = [
       SongSection('Variasi', ['Am', 'Em', 'Am', 'Em', 'F', 'E', 'B7', 'Em']),
     ],
   ),
+  Song(
+    id: 'burung-kakaktua',
+    title: 'Burung Kakaktua',
+    artist: 'Lagu daerah Maluku',
+    genre: 'Folk',
+    level: SongLevel.easy,
+    bpm: 96,
+    key: 'C',
+    strumPattern: 'D DU D DU',
+    sections: [
+      SongSection(
+        'Verse',
+        ['C', 'C', 'G7', 'C', 'C', 'G7', 'G7', 'C'],
+        lyrics: [
+          '[C]Burung kakaktua, hinggap di jen[G7]dela',
+          '[G7]Nenek sudah tua, giginya tinggal [C]dua',
+        ],
+      ),
+      SongSection(
+        'Chorus',
+        ['C', 'F', 'C', 'G7', 'C', 'F', 'G7', 'C'],
+        lyrics: [
+          '[C]Lesbum, [F]lesbum, [C]lesbum la la [G7]la',
+          '[C]Burung kaka[F]ktua [G7]... [C]',
+        ],
+      ),
+    ],
+  ),
+  Song(
+    id: 'amazing-grace',
+    title: 'Amazing Grace',
+    artist: 'Tradisional (John Newton)',
+    genre: 'Folk',
+    level: SongLevel.easy,
+    bpm: 68,
+    key: 'G',
+    strumPattern: 'D DU DU (3/4)',
+    sections: [
+      SongSection(
+        'Verse 1',
+        ['G', 'G7', 'C', 'G', 'G', 'Em', 'D', 'D7'],
+        lyrics: [
+          'A[G]mazing [G7]grace, how [C]sweet the [G]sound',
+          'That [G]saved a [Em]wretch like [D]me [D7]',
+        ],
+      ),
+      SongSection(
+        'Verse 2',
+        ['G', 'G7', 'C', 'G', 'Em', 'D', 'G', 'G'],
+        lyrics: [
+          'I [G]once was [G7]lost, but [C]now am [G]found',
+          'Was [Em]blind but [D]now I [G]see',
+        ],
+      ),
+    ],
+  ),
+  Song(
+    id: 'rising-sun',
+    title: 'House of the Rising Sun',
+    artist: 'Tradisional',
+    genre: 'Blues',
+    level: SongLevel.medium,
+    bpm: 78,
+    key: 'Am',
+    strumPattern: 'Arpeggio 6/8',
+    sections: [
+      SongSection(
+        'Verse',
+        ['Am', 'C', 'D', 'F', 'Am', 'C', 'E7', 'E7'],
+        lyrics: [
+          'There [Am]is a [C]house in [D]New Or[F]leans',
+          'They [Am]call the [C]Rising [E7]Sun',
+        ],
+      ),
+      SongSection(
+        'Verse (lanjutan)',
+        ['Am', 'C', 'D', 'F', 'Am', 'E7', 'Am', 'Am'],
+        lyrics: [
+          "And it's [Am]been the [C]ruin of [D]many a poor [F]boy",
+          'And [Am]God, I [E7]know I\'m [Am]one',
+        ],
+      ),
+    ],
+  ),
 ];
 
 Song songById(String id) => kSongCatalog.firstWhere((s) => s.id == id);

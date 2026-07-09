@@ -33,26 +33,51 @@ class Lesson {
     required this.id,
     required this.track,
     required this.title,
+    this.titleEn,
     required this.minutes,
     required this.kind,
     required this.summary,
+    this.summaryEn,
     this.theoryPoints = const [],
+    this.theoryPointsEn = const [],
     this.practiceChords = const [],
     this.tab,
+    this.guitar,
     this.xpReward = 100,
   });
 
   final String id;
   final LessonTrack track;
   final String title;
+
+  /// English title; falls back to [title] when absent.
+  final String? titleEn;
   final int minutes;
   final LessonKind kind;
+
+  /// [GuitarKind.id] this lesson is specific to; null = every instrument.
+  final String? guitar;
+
+  String titleFor(String lang) =>
+      lang == 'id' ? title : (titleEn ?? title);
+
+  String summaryFor(String lang) =>
+      lang == 'id' ? summary : (summaryEn ?? summary);
+
+  List<String> theoryFor(String lang) =>
+      lang == 'id' || theoryPointsEn.isEmpty ? theoryPoints : theoryPointsEn;
 
   /// One-paragraph description shown in the player.
   final String summary;
 
+  /// English description; falls back to [summary] when absent.
+  final String? summaryEn;
+
   /// Bullet points for theory lessons.
   final List<String> theoryPoints;
+
+  /// English bullets; falls back to [theoryPoints] when empty.
+  final List<String> theoryPointsEn;
 
   /// Chord names (in order) drilled during AI practice.
   final List<String> practiceChords;

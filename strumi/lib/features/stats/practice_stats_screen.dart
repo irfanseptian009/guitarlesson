@@ -3,7 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
+import '../../core/i18n/strings.dart';
 import '../../core/utils/dates.dart';
 import '../../data/catalogs/lessons_catalog.dart';
 import '../../data/models/lesson.dart';
@@ -13,11 +14,6 @@ import '../../widgets/glass_card.dart';
 import '../../widgets/progress_ring.dart';
 import '../../widgets/screen_scaffold.dart';
 
-const _monthsShort = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-  'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
-];
-
 /// Practice statistics: weekly bar chart, totals, and skill breakdown —
 /// every number computed from the real practice log.
 class PracticeStatsScreen extends ConsumerWidget {
@@ -25,6 +21,7 @@ class PracticeStatsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = context.s;
     final progress = ref.watch(progressProvider);
 
     final weekStart = Dates.startOfWeek(DateTime.now());
@@ -45,15 +42,16 @@ class PracticeStatsScreen extends ConsumerWidget {
     }
     final thisWeekMinutes = progress.minutesThisWeek;
 
+    final months = s.monthsShort;
     final rangeLabel =
-        '${weekStart.day} ${_monthsShort[weekStart.month - 1]} – '
+        '${weekStart.day} ${months[weekStart.month - 1]} – '
         '${weekStart.add(const Duration(days: 6)).day} '
-        '${_monthsShort[weekStart.add(const Duration(days: 6)).month - 1]}';
+        '${months[weekStart.add(const Duration(days: 6)).month - 1]}';
 
     return ScreenScaffold(
       gap: 16,
       children: [
-        const SubScreenHeader(title: 'Statistik Latihan'),
+        SubScreenHeader(title: s.practiceStats),
 
         // ------------------------------------------------ weekly chart
         GlassCard(
@@ -63,13 +61,13 @@ class PracticeStatsScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Minggu ini',
-                      style: TextStyle(
+                  Text(s.thisWeek,
+                      style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w700)),
                   Text(rangeLabel,
                       style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.cream.withValues(alpha: 0.5))),
+                          color: context.colors.cream.withValues(alpha: 0.5))),
                 ],
               ),
               const SizedBox(height: 16),
@@ -94,10 +92,10 @@ class PracticeStatsScreen extends ConsumerWidget {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
                               color: weekMinutes[i] == 0
-                                  ? Colors.white.withValues(alpha: 0.08)
+                                  ? context.colors.cream.withValues(alpha: 0.08)
                                   : i == todayIndex
-                                      ? AppColors.orange
-                                      : AppColors.orange
+                                      ? context.colors.orange
+                                      : context.colors.orange
                                           .withValues(alpha: 0.45),
                             ),
                           ),
@@ -108,8 +106,8 @@ class PracticeStatsScreen extends ConsumerWidget {
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                               color: i == todayIndex
-                                  ? AppColors.orangeLight
-                                  : AppColors.creamFaint,
+                                  ? context.colors.orangeLight
+                                  : context.colors.creamFaint,
                             ),
                           ),
                         ],
@@ -128,20 +126,20 @@ class PracticeStatsScreen extends ConsumerWidget {
             children: [
               Expanded(
                 child: _TotalCard(
-                  label: 'Total jam latihan',
+                  label: s.totalHours,
                   value: '${progress.totalSeconds ~/ 3600}',
                   unit:
-                      'j ${(progress.totalSeconds % 3600) ~/ 60}m',
-                  delta: _weekDelta(thisWeekMinutes, lastWeekMinutes),
+                      'h ${(progress.totalSeconds % 3600) ~/ 60}m',
+                  delta: _weekDelta(context, thisWeekMinutes, lastWeekMinutes),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _TotalCard(
-                  label: 'Akurasi rata-rata',
+                  label: s.avgAccuracy,
                   value: '${progress.averageAccuracy}',
                   unit: '%',
-                  delta: _accuracyDelta(progress.accuracyLog),
+                  delta: _accuracyDelta(context, progress.accuracyLog),
                 ),
               ),
             ],
@@ -157,11 +155,11 @@ class PracticeStatsScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Skill breakdown',
-                  style:
-                      TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+              Text(s.skillBreakdown,
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w700)),
               const SizedBox(height: 14),
-              for (final skill in _skills(progress)) ...[
+              for (final skill in _skills(context, progress)) ...[
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Row(
@@ -173,7 +171,7 @@ class PracticeStatsScreen extends ConsumerWidget {
                           style: TextStyle(
                               fontSize: 12,
                               color:
-                                  AppColors.cream.withValues(alpha: 0.65)),
+                                  context.colors.cream.withValues(alpha: 0.65)),
                         ),
                       ),
                       Expanded(
@@ -183,7 +181,7 @@ class PracticeStatsScreen extends ConsumerWidget {
                             value: skill.$2 / 100,
                             minHeight: 7,
                             backgroundColor:
-                                Colors.white.withValues(alpha: 0.1),
+                                context.colors.cream.withValues(alpha: 0.1),
                             valueColor: AlwaysStoppedAnimation(skill.$3),
                           ),
                         ),
@@ -209,32 +207,34 @@ class PracticeStatsScreen extends ConsumerWidget {
     );
   }
 
-  (String, Color) _weekDelta(int thisWeek, int lastWeek) {
+  (String, Color) _weekDelta(BuildContext context, int thisWeek, int lastWeek) {
+    final s = context.s;
     if (lastWeek == 0) {
       return thisWeek > 0
-          ? ('Minggu aktif pertamamu — semangat!', AppColors.green)
-          : ('Belum ada latihan minggu ini', AppColors.creamFaint);
+          ? (s.firstActiveWeek, context.colors.green)
+          : (s.noPracticeThisWeek, context.colors.creamFaint);
     }
     final pct = ((thisWeek - lastWeek) / lastWeek * 100).round();
     return pct >= 0
-        ? ('▲ $pct% dari minggu lalu', AppColors.green)
-        : ('▼ ${pct.abs()}% dari minggu lalu', AppColors.red);
+        ? (s.upFromLastWeek(pct), context.colors.green)
+        : (s.downFromLastWeek(pct.abs()), context.colors.red);
   }
 
-  (String, Color) _accuracyDelta(List<double> log) {
-    if (log.isEmpty) return ('Belum ada data AI', AppColors.creamFaint);
-    if (log.length < 4) return ('Data awal terkumpul', AppColors.green);
+  (String, Color) _accuracyDelta(BuildContext context, List<double> log) {
+    final s = context.s;
+    if (log.isEmpty) return (s.noAiData, context.colors.creamFaint);
+    if (log.length < 4) return (s.earlyData, context.colors.green);
     final half = log.length ~/ 2;
     final first = log.take(half).reduce((a, b) => a + b) / half;
     final second =
         log.skip(half).reduce((a, b) => a + b) / (log.length - half);
     final diff = (second - first).round();
     return diff >= 0
-        ? ('▲ $diff poin — membaik', AppColors.green)
-        : ('▼ ${diff.abs()} poin', AppColors.red);
+        ? (s.upPoints(diff), context.colors.green)
+        : (s.downPoints(diff.abs()), context.colors.red);
   }
 
-  List<(String, int, Color)> _skills(ProgressState progress) {
+  List<(String, int, Color)> _skills(BuildContext context, ProgressState progress) {
     final theoryLessons =
         kLessonCatalog.where((l) => l.kind == LessonKind.theory).toList();
     final theoryDone =
@@ -243,33 +243,40 @@ class PracticeStatsScreen extends ConsumerWidget {
         ? 0
         : ids.map(progress.progressOf).reduce((a, b) => a + b) / ids.length;
 
+    final s = context.s;
     return [
-      ('Chord changes', progress.averageAccuracy, AppColors.orange),
+      (s.chordChanges, progress.averageAccuracy, context.colors.orange),
       (
-        'Strumming',
+        s.strumming,
         (meanProgress(['beg-03', 'int-04']) * 100).round(),
-        AppColors.blue,
+        context.colors.blue,
       ),
       (
-        'Fingerpicking',
+        s.fingerpicking,
         (progress.progressOf('int-02') * 100).round(),
-        AppColors.yellow,
+        context.colors.yellowDeep,
       ),
       (
-        'Teori musik',
+        s.musicTheory,
         theoryLessons.isEmpty
             ? 0
             : (theoryDone / theoryLessons.length * 100).round(),
-        AppColors.green,
+        context.colors.green,
       ),
       (
         'Ear training',
         ((progress.bestEarStreak / 12).clamp(0.0, 1.0) * 100).round(),
-        AppColors.purple,
+        context.colors.purple,
       ),
     ];
   }
 }
+
+String _categoryLabel(PracticeCategory category, S s) => switch (category) {
+      PracticeCategory.songs => s.categorySong,
+      PracticeCategory.recorder => s.categoryRecording,
+      _ => category.label,
+    };
 
 /// Donut of total practice time split by activity category.
 class _CategoryBreakdownCard extends StatelessWidget {
@@ -277,15 +284,16 @@ class _CategoryBreakdownCard extends StatelessWidget {
 
   final ProgressState progress;
 
+  // Fixed chart accents — stable and readable on both themes.
   static const _colors = {
-    PracticeCategory.lesson: AppColors.orange,
-    PracticeCategory.tuner: AppColors.blue,
-    PracticeCategory.metronome: AppColors.yellow,
-    PracticeCategory.chords: AppColors.green,
-    PracticeCategory.songs: AppColors.red,
-    PracticeCategory.earTraining: AppColors.purple,
-    PracticeCategory.recorder: AppColors.orangeLight,
-    PracticeCategory.challenge: AppColors.cream,
+    PracticeCategory.lesson: Color(0xFFF0521F),
+    PracticeCategory.tuner: Color(0xFF3554D1),
+    PracticeCategory.metronome: Color(0xFFEFA51D),
+    PracticeCategory.chords: Color(0xFF1FA05A),
+    PracticeCategory.songs: Color(0xFFDE3F2B),
+    PracticeCategory.earTraining: Color(0xFF7A4FD8),
+    PracticeCategory.recorder: Color(0xFFEF6FAC),
+    PracticeCategory.challenge: Color(0xFF7C8598),
   };
 
   @override
@@ -310,13 +318,14 @@ class _CategoryBreakdownCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Fokus latihanmu',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+          Text(context.s.practiceFocus,
+              style: const TextStyle(
+                  fontSize: 15, fontWeight: FontWeight.w700)),
           const SizedBox(height: 14),
           if (grandTotal == 0)
             Text(
-              'Belum ada data — mulai dari tuner atau lesson pertamamu.',
-              style: TextStyle(fontSize: 12, color: AppColors.creamFaint),
+              context.s.noDataYet,
+              style: TextStyle(fontSize: 12, color: context.colors.creamFaint),
             )
           else
             Row(
@@ -328,7 +337,7 @@ class _CategoryBreakdownCard extends StatelessWidget {
                     for (final entry in ranked)
                       (
                         entry.value / grandTotal,
-                        _colors[entry.key] ?? AppColors.cream,
+                        _colors[entry.key] ?? context.colors.cream,
                       ),
                   ],
                   center: Text(
@@ -357,16 +366,17 @@ class _CategoryBreakdownCard extends StatelessWidget {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  entry.key.label,
+                                  _categoryLabel(entry.key, context.s),
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: AppColors.cream
+                                    color: context.colors.cream
                                         .withValues(alpha: 0.65),
                                   ),
                                 ),
                               ),
                               Text(
-                                '${entry.value ~/ 60} mnt',
+                                '${entry.value ~/ 60} '
+                                '${context.s.minutesShort}',
                                 style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700),
@@ -409,7 +419,7 @@ class _TotalCard extends StatelessWidget {
           Text(label,
               style: TextStyle(
                   fontSize: 11,
-                  color: AppColors.cream.withValues(alpha: 0.5))),
+                  color: context.colors.cream.withValues(alpha: 0.5))),
           const SizedBox(height: 4),
           Text.rich(
             TextSpan(
@@ -422,7 +432,7 @@ class _TotalCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.cream.withValues(alpha: 0.5),
+                    color: context.colors.cream.withValues(alpha: 0.5),
                   ),
                 ),
               ],

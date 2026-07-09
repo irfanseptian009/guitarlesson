@@ -23,7 +23,11 @@ class ChordMatch {
 class ChromaAnalyzer {
   ChromaAnalyzer({required this.sampleRate, this.fftSize = 8192})
       : _templates = {
-          for (final chord in kChordCatalog) chord.name: _templateFor(chord),
+          // Suspended chords share too many notes with their neighbours
+          // and only confuse the matcher — leave them out of detection.
+          for (final chord in kGuitarChords)
+            if (!chord.name.contains('sus'))
+              chord.name: _templateFor(chord),
         };
 
   final double sampleRate;

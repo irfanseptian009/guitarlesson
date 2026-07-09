@@ -9,8 +9,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
-import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
 import '../../core/audio/wav_codec.dart';
+import '../../core/i18n/strings.dart';
 import '../../core/dsp/yin.dart';
 import '../../core/music/note_utils.dart';
 import '../../core/utils/practice_clock.dart';
@@ -25,8 +26,7 @@ class RiffRecorderScreen extends ConsumerStatefulWidget {
   const RiffRecorderScreen({super.key});
 
   @override
-  ConsumerState<RiffRecorderScreen> createState() =>
-      _RiffRecorderScreenState();
+  ConsumerState<RiffRecorderScreen> createState() => _RiffRecorderScreenState();
 }
 
 class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
@@ -53,7 +53,8 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
     super.initState();
     final progress = ref.read(progressProvider.notifier);
     _clock = PracticeClock(
-        (s) => progress.addPracticeSeconds(PracticeCategory.recorder, s));
+      (s) => progress.addPracticeSeconds(PracticeCategory.recorder, s),
+    );
     _playerDone = _player.onPlayerComplete.listen((_) {
       if (mounted) setState(() => _playingPath = null);
     });
@@ -64,12 +65,13 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
     final docs = await getApplicationDocumentsDirectory();
     final dir = Directory('${docs.path}${Platform.pathSeparator}riffs');
     await dir.create(recursive: true);
-    final files = dir
-        .listSync()
-        .whereType<File>()
-        .where((f) => f.path.endsWith('.wav'))
-        .toList()
-      ..sort((a, b) => b.path.compareTo(a.path));
+    final files =
+        dir
+            .listSync()
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.wav'))
+            .toList()
+          ..sort((a, b) => b.path.compareTo(a.path));
     if (mounted) {
       setState(() {
         _riffDir = dir;
@@ -94,14 +96,17 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
     try {
       final amplitude = await _recorder.getAmplitude();
       // Map −45..0 dBFS to 0..1.
-      final normalized =
-          ((amplitude.current + 45) / 45).clamp(0.0, 1.0).toDouble();
+      final normalized = ((amplitude.current + 45) / 45)
+          .clamp(0.0, 1.0)
+          .toDouble();
       if (!mounted) return;
       setState(() {
         _levels.add(normalized);
         if (_levels.length > _levelBarCount) _levels.removeAt(0);
       });
-    } catch (_) {/* amplitude polling is best-effort */}
+    } catch (_) {
+      /* amplitude polling is best-effort */
+    }
   }
 
   // ------------------------------------------------------------ recording
@@ -116,21 +121,24 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
       setState(() => _recording = false);
       await _loadRiffs();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Riff tersimpan! 🎸')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.s.riffSaved)));
       }
       return;
     }
 
     if (!await _recorder.hasPermission()) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Izin mikrofon dibutuhkan.')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.s.micNeeded)));
       }
       return;
     }
     final dir = _riffDir ?? await getApplicationDocumentsDirectory();
-    final path = '${dir.path}${Platform.pathSeparator}'
+    final path =
+        '${dir.path}${Platform.pathSeparator}'
         'riff_${DateTime.now().millisecondsSinceEpoch}.wav';
     await _recorder.start(
       const RecordConfig(
@@ -148,7 +156,9 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
       if (mounted) setState(() => _elapsedSeconds++);
     });
     _levelTimer = Timer.periodic(
-        const Duration(milliseconds: 110), (_) => unawaited(_pollLevel()));
+      const Duration(milliseconds: 110),
+      (_) => unawaited(_pollLevel()),
+    );
   }
 
   // ------------------------------------------------------------- playback
@@ -168,17 +178,22 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Hapus riff?', style: TextStyle(fontSize: 17)),
-        content: const Text('Rekaman ini akan dihapus permanen.'),
+        title: Text(
+          context.s.deleteRiffTitle,
+          style: const TextStyle(fontSize: 17),
+        ),
+        content: Text(context.s.deleteRiffBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+            child: Text(context.s.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child:
-                const Text('Hapus', style: TextStyle(color: AppColors.red)),
+            child: Text(
+              context.s.delete,
+              style: TextStyle(color: context.colors.red),
+            ),
           ),
         ],
       ),
@@ -204,7 +219,7 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
     setState(() => _analyzingPath = null);
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.surfaceDeep,
+      backgroundColor: context.colors.surfaceDeep,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
       ),
@@ -214,15 +229,16 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Analisis AI',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            Text(
+              context.s.aiAnalysis,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 6),
             Text(
               notes.isEmpty
-                  ? 'Tidak ada nada jelas terdeteksi — coba rekam lebih '
-                      'dekat ke gitar.'
-                  : 'Terdeteksi ${notes.length} nada:',
-              style: TextStyle(fontSize: 12, color: AppColors.creamDim),
+                  ? context.s.noClearNotes
+                  : context.s.notesDetected(notes.length),
+              style: TextStyle(fontSize: 12, color: context.colors.creamDim),
             ),
             if (notes.isNotEmpty) ...[
               const SizedBox(height: 14),
@@ -233,19 +249,22 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
                   for (final note in notes)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: AppColors.blue.withValues(alpha: 0.14),
+                        color: context.colors.blue.withValues(alpha: 0.14),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: AppColors.blue.withValues(alpha: 0.3)),
+                          color: context.colors.blue.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Text(
                         note,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.blue,
+                          color: context.colors.blue,
                         ),
                       ),
                     ),
@@ -265,9 +284,11 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
     final match = RegExp(r'riff_(\d+)\.wav').firstMatch(name);
     var label = '';
     if (match != null) {
-      final date =
-          DateTime.fromMillisecondsSinceEpoch(int.parse(match.group(1)!));
-      label = '${date.day}/${date.month}/${date.year} · '
+      final date = DateTime.fromMillisecondsSinceEpoch(
+        int.parse(match.group(1)!),
+      );
+      label =
+          '${date.day}/${date.month}/${date.year} · '
           '${date.hour.toString().padLeft(2, '0')}:'
           '${date.minute.toString().padLeft(2, '0')}';
     }
@@ -277,13 +298,14 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.s;
     return ScreenScaffold(
       gap: 16,
       children: [
-        const SubScreenHeader(title: 'Riff Recorder'),
+        SubScreenHeader(title: s.riffRecorder),
         Text(
-          'Rekam ide riff-mu — AI membaca nadanya',
-          style: TextStyle(fontSize: 13, color: AppColors.creamDim),
+          s.riffSubtitle,
+          style: TextStyle(fontSize: 13, color: context.colors.creamDim),
         ),
 
         // ------------------------------------------------ record card
@@ -299,18 +321,18 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
                   width: 84,
                   height: 84,
                   decoration: BoxDecoration(
-                    gradient:
-                        _recording ? null : AppColors.buttonGradient,
+                    gradient: _recording ? null : context.colors.buttonGradient,
                     color: _recording
-                        ? AppColors.red.withValues(alpha: 0.9)
+                        ? context.colors.red.withValues(alpha: 0.9)
                         : null,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: (_recording
-                                ? AppColors.red
-                                : AppColors.orangeGradientBottom)
-                            .withValues(alpha: 0.4),
+                        color:
+                            (_recording
+                                    ? context.colors.red
+                                    : context.colors.orangeGradientBottom)
+                                .withValues(alpha: 0.4),
                         blurRadius: 30,
                         offset: const Offset(0, 12),
                       ),
@@ -318,7 +340,7 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
                   ),
                   child: Icon(
                     _recording ? Icons.stop_rounded : Icons.mic_rounded,
-                    color: AppColors.onOrange,
+                    color: context.colors.onOrange,
                     size: 34,
                   ),
                 ),
@@ -328,54 +350,60 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
                 Text(
                   '${(_elapsedSeconds ~/ 60).toString().padLeft(2, '0')}:'
                   '${(_elapsedSeconds % 60).toString().padLeft(2, '0')}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.red,
+                    color: context.colors.red,
                   ),
                 ),
                 const SizedBox(height: 12),
                 // Live input level meter.
-                SizedBox(
-                  height: 34,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      for (var i = 0; i < _levelBarCount; i++)
-                        Container(
-                          width: 4,
-                          height: 4 +
-                              (i < _levels.length ? _levels[i] : 0.0) * 30,
-                          margin:
-                              const EdgeInsets.symmetric(horizontal: 2),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(2),
-                            color: AppColors.red.withValues(
-                              alpha: i < _levels.length ? 0.85 : 0.2,
+                RepaintBoundary(
+                  child: SizedBox(
+                    height: 34,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        for (var i = 0; i < _levelBarCount; i++)
+                          Container(
+                            width: 4,
+                            height:
+                                4 +
+                                (i < _levels.length ? _levels[i] : 0.0) * 30,
+                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(2),
+                              color: context.colors.red.withValues(
+                                alpha: i < _levels.length ? 0.85 : 0.2,
+                              ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ] else
                 Text(
-                  'Ketuk untuk mulai merekam',
-                  style:
-                      TextStyle(fontSize: 12, color: AppColors.creamDim),
+                  s.tapToRecord,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.colors.creamDim,
+                  ),
                 ),
             ],
           ),
         ),
 
         // ------------------------------------------------ riff list
-        const Text('Riff tersimpan',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+        Text(
+          s.savedRiffs,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        ),
         if (_riffs.isEmpty)
           Text(
-            'Belum ada rekaman. Riff pertamamu menunggu!',
-            style: TextStyle(fontSize: 12, color: AppColors.creamFaint),
+            s.noRecordings,
+            style: TextStyle(fontSize: 12, color: context.colors.creamFaint),
           )
         else
           Column(
@@ -385,47 +413,56 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
                 GlassCard(
                   radius: 20,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 12),
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
                       Container(
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: AppColors.blue.withValues(alpha: 0.16),
+                          color: context.colors.blue.withValues(alpha: 0.16),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(Icons.graphic_eq_rounded,
-                            color: AppColors.blue, size: 22),
+                        child: Icon(
+                          Icons.graphic_eq_rounded,
+                          color: context.colors.blue,
+                          size: 22,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Riff ${_riffs.length - i}',
-                                style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700)),
+                            Text(
+                              s.riffN(_riffs.length - i),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                             const SizedBox(height: 2),
                             Text(
                               _riffSubtitle(_riffs[i]),
                               style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.cream
-                                      .withValues(alpha: 0.5)),
+                                fontSize: 11,
+                                color: context.colors.cream.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
                       IconButton(
-                        onPressed: () =>
-                            unawaited(_togglePlay(_riffs[i])),
+                        onPressed: () => unawaited(_togglePlay(_riffs[i])),
                         icon: Icon(
                           _playingPath == _riffs[i].path
                               ? Icons.stop_circle_outlined
                               : Icons.play_circle_outline_rounded,
-                          color: AppColors.orangeLight,
+                          color: context.colors.orangeLight,
                           size: 26,
                         ),
                       ),
@@ -435,38 +472,46 @@ class _RiffRecorderScreenState extends ConsumerState<RiffRecorderScreen> {
                             : null,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
-                            color:
-                                AppColors.orange.withValues(alpha: 0.15),
+                            color: context.colors.orange.withValues(
+                              alpha: 0.15,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                                color: AppColors.orange
-                                    .withValues(alpha: 0.4)),
+                              color: context.colors.orange.withValues(
+                                alpha: 0.4,
+                              ),
+                            ),
                           ),
                           child: _analyzingPath == _riffs[i].path
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 12,
                                   height: 12,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: AppColors.orangeLight,
+                                    color: context.colors.orangeLight,
                                   ),
                                 )
-                              : const Text(
-                                  'AI',
+                              : Text(
+                                  'AI', // Universal abbreviation — no translation needed.
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColors.orangeLight,
+                                    color: context.colors.orangeLight,
                                   ),
                                 ),
                         ),
                       ),
                       IconButton(
                         onPressed: () => unawaited(_delete(_riffs[i])),
-                        icon: Icon(Icons.delete_outline_rounded,
-                            color: AppColors.creamFaint, size: 22),
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          color: context.colors.creamFaint,
+                          size: 22,
+                        ),
                       ),
                     ],
                   ),
@@ -489,15 +534,13 @@ List<String> analyzeRiffNotes(Uint8List bytes) {
   const window = 2048;
   const hop = 1024;
   final maxSamples = sampleRate * 30; // cap analysis at 30 s
-  final limit =
-      samples.length < maxSamples ? samples.length : maxSamples;
+  final limit = samples.length < maxSamples ? samples.length : maxSamples;
 
   final detector = YinDetector(sampleRate: sampleRate.toDouble());
   final notes = <String>[];
   String? last;
   for (var start = 0; start + window <= limit; start += hop) {
-    final estimate =
-        detector.estimate(samples.sublist(start, start + window));
+    final estimate = detector.estimate(samples.sublist(start, start + window));
     if (estimate == null || estimate.confidence < 0.9) continue;
     final pitch = NoteUtils.pitchFromFrequency(estimate.frequency);
     if (pitch == null) continue;
